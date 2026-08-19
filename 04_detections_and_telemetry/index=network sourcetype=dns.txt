@@ -1,0 +1,31 @@
+index=network sourcetype=*dns*
+| eval query=lower(query)
+| search NOT [
+    | makeresults 
+    | eval query="*.local *.lan *.internal *.corp *.yourcompany.com" 
+    | makemv query 
+    | mvexpand query 
+    | fields query
+  ]
+| bin _time span=1m
+| stats count as count_1m, values(record_type) as query_types by _time, src_ip, query
+
+| eval minute_time = _time
+| bin _time span=60m
+
+| stats max(count_1m) as peak_1m_burst,
+        sum(count_1m) as total_60m_count,
+        dc(minute_time) as active_minutes,
+        values(query_types) as query_types
+        by _time, src_ip, query
+
+| where peak_1m_burst > 100 OR total_60m_count > 1000
+
+| eval detection_type = case(
+    peak_1m_burst > 100 AND total_60m_count > 1000, "Both (Burst + Beaconing)", 
+    peak_1m_burst > 100, "Rapid Burst (Exfiltration/Malware)", 
+    total_60m_count > 1000, "Slow & Steady (C2 Beaconing)"
+  )
+  
+| sort - total_60m_count, peak_1m_burst
+| fields _time, detection_type, src_ip, query, peak_1m_burst, total_60m_count, active_minutes, query_types

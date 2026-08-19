@@ -1,0 +1,27 @@
+index="data_exfil" sourcetype="95 milliion" NOT query="*amazonaws.com" NOT query="*cloudfront.net" NOT query="*akamai.net" NOT query="*office.com" NOT query="*microsoft.com" NOT query="*apple.com"
+| eventstats count as total_requests, dc(query) as unique_domains by src_ip
+| eval long_query=if(len(query) > 30, query, null())
+
+| eventstats dc(src_ip) as total_network_ips
+| eventstats dc(src_ip) as ips_using_query by long_query
+| eval network_pct = (ips_using_query / total_network_ips) * 100
+| eval rare_long_query = if(network_pct < 5 AND isnotnull(long_query), long_query, null())
+
+| stats count as query_freq by src_ip, total_requests, unique_domains, rare_long_query
+| sort src_ip, - query_freq
+| streamstats count(rare_long_query) as domain_rank by src_ip
+| where domain_rank <= 5 OR isnull(rare_long_query)
+| stats first(total_requests) as total_requests, first(unique_domains) as unique_domains, list(rare_long_query) as query_sample by src_ip
+
+| eval uniqueness_ratio = round((unique_domains / total_requests) * 100, 2)
+| eventstats p95(total_requests) as p95_vol, p95(uniqueness_ratio) as p95_ratio
+| eval Category=case(
+    total_requests > p95_vol AND uniqueness_ratio > p95_ratio, "Critical (High Vol & High Uniqueness)",
+    uniqueness_ratio > p95_ratio AND total_requests >= 50, "Suspicious (Low & Slow DGA/Exfil)",
+    total_requests > p95_vol, "High Volume (Possible P2P/Server)",
+    1=1, "Normal"
+)
+| where Category != "Normal" AND (Category="Critical (High Vol & High Uniqueness)" OR Category="Suspicious (Low & Slow DGA/Exfil)")
+| fields - p95_vol, p95_ratio
+| sort - uniqueness_ratio, - total_requests
+| table Category, src_ip, total_requests, unique_domains, uniqueness_ratio, query_sample
