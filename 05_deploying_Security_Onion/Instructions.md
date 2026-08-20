@@ -64,6 +64,8 @@ pvesm status
 
 <img src="./images/Proxmox/disk\_usage.png" alt="Disk Usage" />
 
+**!\[Disk Usage](images/Proxmox/disk\_usage.png)**
+
 
 
 
