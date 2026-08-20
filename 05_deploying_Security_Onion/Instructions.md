@@ -105,8 +105,6 @@ pvesm status
 
 
 
-
-
 Before booting the Security Onion ISO,configure the virtual hardware to match the required network segmentation and storage layout.
 
 You can verify the Proxmox host's available resources from the Proxmox shell.
