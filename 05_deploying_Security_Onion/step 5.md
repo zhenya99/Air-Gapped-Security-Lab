@@ -1,25 +1,6 @@
-```
-
-**2. Authenticate against the Database**
-Verify the container is listening on port `9200` and can answer authenticated requests by pulling the generated password directly from Salt:
-```bash
-ES_PASS=$(salt-call pillar.get \
-  'elasticsearch:auth:users:so_elastic_user:pass' \
-  --out=txt | awk '{print $2}')
-
-curl -k -u "so_elastic:$ES_PASS" https://127.0.0.1:9200/
-```
-*A successful response will output a JSON block identifying the cluster name as `"securityonion"` and the version as `"9.3.7"`.*
-
-**3. Start the SOC and ElastAlert Services**
-```bash
-salt-call state.apply soc -l info
-salt-call state.apply elastalert -l info
-```
-
 ---
 
-## Phase 5: System Convergence & Final Validation
+## Step 5: System Convergence & Final Validation
 
 > **Context:** A "highstate" forces SaltStack to compare the entire system against its ideal configuration files and automatically correct any remaining discrepancies. A clean highstate is the ultimate proof of a stable environment. 
 
