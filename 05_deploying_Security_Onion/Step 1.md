@@ -11,6 +11,7 @@ pvesh get /nodes/localhost/status
 free -h
 df -h
 lsblk
+```
 
 *For a standalone or evaluation deployment of Security Onion on Proxmox VE, allocate at least 4 CPU cores, 32GB of RAM, and 200GB+ of fast local SSD storage. Production or higher-traffic setups require scaling up resources significantly based on packet capture and Elasticsearch indexing loads.*
 
