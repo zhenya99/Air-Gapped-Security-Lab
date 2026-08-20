@@ -13,7 +13,8 @@ free -h
 df -h
 lsblk
 ```
-For a standalone or evaluation deployment of Security Onion on Proxmox VE, allocate at least 4 CPU cores, 32GB of RAM, and 200GB+ of fast local SSD storage. Production or higher-traffic setups require scaling up resources significantly based on packet capture and Elasticsearch indexing loads
+*For a standalone or evaluation deployment of Security Onion on Proxmox VE, allocate at least 4 CPU cores, 32GB of RAM, and 200GB+ of fast local SSD storage. Production or higher-traffic setups require scaling up resources significantly based on packet capture and Elasticsearch indexing loads.*
+
 
 
 **1.1 Download ISO and move it to Proxmox**
@@ -21,6 +22,7 @@ For a standalone or evaluation deployment of Security Onion on Proxmox VE, alloc
 Download the Security Onion ISO image by following the official [Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD_AND_VERIFY_ISO.md).
 
 **Open PowerShell on your Windows 11 machine.**
+
 Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
 
 ```bash
@@ -43,6 +45,8 @@ The 1TB external drive (`sda`) currently contains old partitions and needs to be
 
 
 **Next, configure the virtual hardware to match the network segmentation and storage layout.**
+
+
 **1.1 Wipe the existing partition table**
 *Warning: This destroys all data currently on `sda`.*
 Run the following commands to remove all filesystem signatures and destroy the GPT/MBR partition tables:
