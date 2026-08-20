@@ -1,5 +1,3 @@
----
-
 ## Step 5: System Convergence & Final Validation
 
 > **Context:** A "highstate" forces SaltStack to compare the entire system against its ideal configuration files and automatically correct any remaining discrepancies. A clean highstate is the ultimate proof of a stable environment. 
