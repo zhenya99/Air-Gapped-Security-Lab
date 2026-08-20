@@ -36,7 +36,7 @@ pvesm list localnetwork
 
 
 
-!\[Disk Usage](.\\images\\disk\_usage.png)
+!\[Disk Usage](\\images\\proxmox\\disk\_usage.png)
 
 
 
