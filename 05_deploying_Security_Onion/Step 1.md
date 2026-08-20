@@ -1,4 +1,21 @@
-### Step 1: Verifying the ISO and Storage Pool
+### Step 1: Environment Staging 
+
+
+** Before continuing with install, verify the minimum requirements:**  
+Verify  host's capacity from the Proxmox shell from Windows:
+
+```bash
+ssh root@lab
+lscpu
+pvesh get /nodes/localhost/status
+free -h
+df -h
+lsblk
+```
+For a standalone or evaluation deployment of Security Onion on Proxmox VE, allocate at least 4 CPU cores, 32GB of RAM, and 200GB+ of fast local SSD storage. Production or higher-traffic setups require scaling up resources significantly based on packet capture and Elasticsearch indexing loads
+
+
+**1.1 Download ISO and move it to Proxmox **
 
 Download the Security Onion ISO image by following the official [Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD_AND_VERIFY_ISO.md).
 
@@ -11,18 +28,7 @@ scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:
 
 ```
 
-Before booting the ISO, configure the virtual hardware to match the network segmentation and storage layout. Verify  host's capacity from the Proxmox shell from Windows:
-
-```bash
-ssh root@lab
-lscpu
-pvesh get /nodes/localhost/status
-free -h
-df -h
-lsblk
-```
-
-**Check the exact ISO name in local storage**:
+**Check the exact ISO name in local storage**
 
 ```bash
 pvesm list local --content iso
@@ -35,6 +41,7 @@ lsblk
 The 1TB external drive (`sda`) currently contains old partitions and needs to be formatted before Proxmox can use it for the Security Onion VM. To fix this, wipe the disk, initialize it as a Physical Volume, and create an LVM-Thin pool for optimized virtual machine storage.
 
 
+**Next, configure the virtual hardware to match the network segmentation and storage layout.**
 **1.1 Wipe the existing partition table**
 *Warning: This destroys all data currently on `sda`.*
 Run the following commands to remove all filesystem signatures and destroy the GPT/MBR partition tables:
