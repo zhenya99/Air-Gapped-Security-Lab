@@ -24,8 +24,6 @@ Download the Security Onion ISO image by following the official [Security Onion 
 
 Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
 
-Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
-
 ```bash
 scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
 ```
