@@ -37,7 +37,10 @@ Verify available space on your external drive
 pvesm list local --content iso
 pvesm status
 
-```
+```markdown
+
+\# Disk Usage
+
 
 
 !\[Disk Usage](../images/Proxmox/disk\_usage.png)
