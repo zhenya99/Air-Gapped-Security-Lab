@@ -64,7 +64,7 @@ pvesm status
 
 ```
 
-!\[Disk](images/Proxmox/disk\_usage.jpg)
+!\[Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
 
 Before booting the Security Onion ISO...
 
