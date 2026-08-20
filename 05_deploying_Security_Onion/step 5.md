@@ -1,7 +1,33 @@
 # Step 5: Complete and Validate Security Onion 3.2.0
 ---
 
-> **Troubleshooting Scenario:** Under normal circumstances, the Security Onion setup wizard automates the entire deployment process. However, because this lab environment is strictly air-gapped, the automated installation crashed. The setup scripts attempted to reach the internet to seed the Docker registry, failing instantly and leaving the system with a fractured SaltStack configuration and missing Elasticsearch dependencies. **The following steps detail the manual troubleshooting, backend recovery, and configuration engineering required to fix the broken installation and successfully bring the SIEM online.**
+> **Troubleshooting Scenario:** Under normal circumstances, the Security Onion setup wizard automates the entire deployment process. However, because this lab environment is strictly air-gapped, the automated installation crashed. The setup scripts attempted to reach the internet to seed the Docker registry, failing instantly and leaving the system with a fractured SaltStack configuration and missing Elasticsearch dependencies. 
+
+![SaltStack Jinja Compilation Crash](images/Proxmox/SecOnion/085234.png)
+*Figure 5.0: The fatal SaltStack compilation error (`TemplateNotFound: registry/map.jinja`) caused by the air-gapped installation failure.*
+
+### The Investigation: Tracing the Missing Dependencies
+To understand why the registry failed to build, we must track down where SaltStack is looking for its configuration files and why they are missing.
+
+**1. Checking the Salt Master Configuration**
+By parsing the `/etc/salt/master` file, we can see that Security Onion does not use the default `/srv/salt` directory. Instead, the `file_roots` are dynamically mapped to `/opt/so/saltstack/local/salt`.
+
+![Checking file_roots](images/Proxmox/SecOnion/40403.png)
+*Figure 5.1: Verifying the custom SaltStack `file_roots` directory mapping.*
+
+**2. Verifying the Missing States**
+Searching the active `file_roots` directory for the core components (`docker`, `firewall`, `registry`) confirms that the installation script crashed before it could copy the `.sls` state files into production.
+
+![Missing SLS Files](images/Proxmox/SecOnion/0655.png)
+*Figure 5.2: Querying the active Salt directory yields no results for the required state files.*
+
+**3. Finding the Orphaned Files**
+Searching the original installer directory reveals that the required state files do exist locally (`/root/SecurityOnion/salt/`), but were abandoned when the internet check failed.
+
+![Orphaned SLS Files](images/Proxmox/SecOnion/40712.png)
+*Figure 5.3: Locating the stranded `.sls` configuration files in the root installer directory.*
+
+**The following steps detail the manual recovery and configuration engineering required to bypass this failure, restore the offline Docker registry, and successfully bring the SIEM online.**
 
 ---
 
