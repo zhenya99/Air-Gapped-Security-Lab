@@ -6,23 +6,27 @@ Deploying Security Onion 3.2.x requires precise interface alignment to ensure th
 
 ## 1\. VM Provisioning in Proxmox
 
-Download the ISO image from an official https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD\_AND\_VERIFY\_ISO.md to the Windows host. 
+Download the Security Onion ISO image by following the official \[Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD\_AND\_VERIFY\_ISO.md).
+
+
 
 Open PowerShell on your Windows 11 machine.
 
 
 
-Run this exact command (replace the path with exactly where the ISO is on your Windows machine):
+Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
 
 
 
-Bash
+```bash
 
-scp C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso root@172.16.99.20:/var/lib/vz/templat
+scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
+
+```
 
 
 
-## Step 1: Verify the ISO and Storage Pool
+\## Step 1: Verify the ISO and Storage Pool
 
 
 
@@ -30,26 +34,35 @@ scp C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso root@172.16.99.20:/v
 
 
 
+Run:
+
+
+
 ```bash
 
-Verify available space on your external drive
-
 pvesm list local --content iso
+
+```
+
+
+
+\### Verify available storage and resources on the Proxmox host
+
+
+
+Run:
+
+
+
+```bash
+
 pvesm status
 
-```markdown
-
-\# Disk Usage
+```
 
 
 
-\[Disk Usage](../images/Proxmox/disk\_usage.png)
-
-
-
-
-
-
+!\[Disk Usage](../images/Proxmox/disk\_usage.png)
 
 
 
