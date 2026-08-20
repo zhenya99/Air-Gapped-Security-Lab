@@ -22,21 +22,25 @@ scp C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso root@172.16.99.20:/v
 
 
 
-Step 1: Verify the ISO and Storage Pool
+## Step 1: Verify the ISO and Storage Pool
 
-# Check the exact ISO name in local storage
+
+
+\### Check the exact ISO name in local storage
+
+
+
+```bash
+
+Verify available space on your external drive
 
 pvesm list local --content iso
+pvesm status
 
 
 
-\# Verify available space on your external drive
 
-pvesm list localnetwork
-
-
-
-!\[Disk Usage](.\\images\\Proxmox\\disk\_usage.png)
+!\[Disk Usage](images/Proxmox/disk\_usage.png)
 
 
 
