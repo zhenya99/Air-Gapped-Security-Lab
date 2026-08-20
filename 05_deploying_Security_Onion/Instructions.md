@@ -94,7 +94,7 @@ qm create 900 \
   --boot order=ide2;scsi0 \
   --agent 1 \
   --onboot 1
-'''
+```
 
 ![Disk](/images/Proxmox/Provisioning.png)
 
