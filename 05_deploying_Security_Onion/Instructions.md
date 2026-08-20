@@ -26,7 +26,7 @@ free -h
 df -h
 lsblk
 ```
-I am running an i7-12700K, which features 12 physical cores (8 Performance, 4 Efficient) and hyper-threading, meaning Proxmox actually has 20 logical threads to work with. The host also features 46GB of memory, a 240GB internal SSD, and a 1TB external SSD.
+I am running an **i7-12700K**, which features *12 physical cores (8 Performance, 4 Efficient) and hyper-threading*, meaning Proxmox actually has 20 logical threads to work with. The host also features **46GB** of memory, a **240GB** internal SSD, and a **1TB** external SSD.
 
 
 
