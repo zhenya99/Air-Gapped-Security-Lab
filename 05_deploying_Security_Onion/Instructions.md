@@ -6,8 +6,6 @@ Deploying Security Onion 3.2.x requires precise interface alignment to ensure th
 
 
 
-
-
 \## 1. VM Provisioning in Proxmox
 
 
@@ -24,7 +22,7 @@ Run the following command, replacing the Windows path with the exact location of
 
 ```bash
 
-scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
+scp "C:\\\\Users\\\\YourUser\\\\Downloads\\\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
 
 ```
 
@@ -39,80 +37,14 @@ Check the exact ISO name in local storage
 ```bash
 pvesm list local --content iso
 pvesm status
-<<<<<<< HEAD
-=======
 
 ```
 
-![Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
-
-Before booting the Security Onion ISO...
+!\[Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Before booting the Security Onion ISO,configure the virtual hardware to match the required network segmentation and storage layout.
-
-You can verify the Proxmox host's available resources from the Proxmox shell.
-
-### Verify Proxmox Host Resources
-
-```
-ssh root@lab
-
-lscpu
-pvesh get /nodes/localhost/status
-free -h
-df -h
->>>>>>> 88cb09af89039c28c4d8fb6f9bfb0b96a9c4a02d
-lsblk
-```
-
-!\[Disk](images/Proxmox/disk.usage.jpg)
-
-
-
-Before booting the Security Onion ISO, configure the virtual hardware to match the required network segmentation and storage layout. You can verify the Proxmox host's available resources from the Proxmox shell.
 
