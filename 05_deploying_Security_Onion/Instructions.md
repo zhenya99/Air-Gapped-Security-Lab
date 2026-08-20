@@ -1,128 +1,70 @@
-# \## 1. VM Provisioning in Proxmox
+# Security Onion v3.2.0 Deployment Guide
 
-# 
+## 1. VM Provisioning in Proxmox
 
-# Before booting the Security Onion ISO, configure the virtual hardware to match the required network segmentation and storage layout.
+Before booting the Security Onion ISO, configure the virtual hardware to match the required network segmentation and storage layout.
 
-# 
+### Verify Proxmox Host Resources
 
-# \### Verify Proxmox Host Resources
+From the Proxmox shell, verify the available CPU, memory, and storage:
 
-# 
+```
+ssh root@lab
 
-# From the Proxmox shell, verify the available CPU, memory, and storage:
+lscpu
+pvesh get /nodes/localhost/status
+free -h
+df -h
+lsblk
+```
 
-# 
+These commands provide information about:
 
-# ```bash
+* CPU architecture and available processors
+* Proxmox node status and resource allocation
+* Available system memory
+* Mounted filesystems and available disk space
+* Block devices and attached storage
 
-# ssh root@lab
+### Security Onion VM Blueprint
 
-# 
+| Resource           | Configuration         |
+| ------------------ | --------------------- |
+| **CPU**            | 8–12 cores            |
+| **CPU Type**       | `host`                |
+| **Memory**         | 24–28 GB              |
+| **Ballooning**     | Disabled              |
+| **Storage**        | 250–500 GB            |
+| **Management NIC** | `vmbr0` / VLAN `99`   |
+| **Capture NIC**    | `vmbr1` / No VLAN tag |
 
-# lscpu
+### Management Interface
 
-# pvesh get /nodes/localhost/status
+```
+Bridge:    vmbr0
+VLAN Tag:  99
+Firewall:  Enabled
+Purpose:   Security Onion management and SOC access
+```
 
-# free -h
+### Capture Interface
 
-# df -h
+```
+Bridge:    vmbr1
+VLAN Tag:  <Leave Blank>
+Firewall:  Disabled
+Purpose:   Mirrored network traffic capture
+```
 
-# lsblk
+> **Important:** The capture interface should remain dedicated to monitoring traffic. Do not assign a management IP address to this interface.
 
-# ```
+### Host Hardware
 
-# 
+The lab Proxmox host provides:
 
-# These commands provide information about:
+* **CPU:** Intel Core i7-12700K
+* **Memory:** 46 GB RAM
+* **Internal Storage:** 240 GB SSD
+* **External Storage:** 1 TB SSD
 
-# 
-
-# \* CPU architecture and available processors
-
-# \* Proxmox node status and resource allocation
-
-# \* Available system memory
-
-# \* Mounted filesystems and available disk space
-
-# \* Block devices and attached storage
-
-# 
-
-# \### Security Onion VM Blueprint
-
-# 
-
-# | Resource           | Recommended Configuration |
-
-# | ------------------ | ------------------------- |
-
-# | \*\*CPU\*\*            | 8–12 cores                |
-
-# | \*\*CPU Type\*\*       | `host`                    |
-
-# | \*\*Memory\*\*         | 24–28 GB                  |
-
-# | \*\*Ballooning\*\*     | Disabled                  |
-
-# | \*\*Storage\*\*        | 250–500 GB                |
-
-# | \*\*Management NIC\*\* | `vmbr0`, VLAN `99`        |
-
-# | \*\*Capture NIC\*\*    | `vmbr1`, VLAN tag blank   |
-
-# 
-
-# > \*\*Note:\*\* The lab host uses an Intel i7-12700K with 46 GB of RAM, a 240 GB internal SSD, and a 1 TB external SSD. The Security Onion VM should therefore be sized carefully to leave sufficient resources for the Proxmox host and other virtual machines.
-
-# 
-
-# \### Network Interfaces
-
-# 
-
-# The Security Onion VM requires two separate network interfaces:
-
-# 
-
-# \*\*Management Interface\*\*
-
-# 
-
-# ```text
-
-# Bridge:    vmbr0
-
-# VLAN Tag:  99
-
-# Firewall:  Enabled
-
-# Purpose:   Security Onion management and SOC access
-
-# ```
-
-# 
-
-# \*\*Capture Interface\*\*
-
-# 
-
-# ```text
-
-# Bridge:    vmbr1
-
-# VLAN Tag:  <Leave Blank>
-
-# Firewall:  Disabled
-
-# Purpose:   Mirrored network traffic capture
-
-# ```
-
-# 
-
-# > \*\*Important:\*\* Keep the capture interface dedicated to monitoring traffic. Do not configure it as a normal management interface or assign a management IP address to it.
-
-
-
+Because Security Onion is resource-intensive, allocate resources carefully so sufficient CPU, RAM, and storage remain available for the Proxmox host and other laboratory VMs.
