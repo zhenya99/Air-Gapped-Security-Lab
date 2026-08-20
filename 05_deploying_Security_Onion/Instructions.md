@@ -41,3 +41,14 @@ lsblk
 ```
 ![Disk](/images/Proxmox/disk_usage.png)
 
+### Step 1.1: Format and Initialize the External SSD
+
+The 1TB external drive (`sda`) currently contains old partitions and needs to be formatted before Proxmox can use it for the Security Onion VM. To fix this, wipe the disk, initialize it as a Physical Volume, and create an LVM-Thin pool for optimized virtual machine storage.
+
+**1. Wipe the existing partition table**
+*Warning: This destroys all data currently on `sda`.*
+Run the following commands to remove all filesystem signatures and destroy the GPT/MBR partition tables:
+
+```bash
+wipefs -a /dev/sda
+sgdisk --zap-all /dev/sda
