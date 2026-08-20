@@ -72,7 +72,7 @@ Without the `onboot` setting enabled, the VM will remain powered off after a Pro
 If the boot order, QEMU Guest Agent, or automatic-start settings are missing or incorrect, apply them with:
 
 ```bash
-qm set 900 --boot "order=ide2;scsi0" --agent 1 --onboot 1
+qm set 900 --boot "order=scsi0;ide2" --agent 1 --onboot 1
 ```
 
 Then verify the configuration again:
