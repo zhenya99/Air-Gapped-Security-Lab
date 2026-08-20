@@ -1,7 +1,7 @@
 ### Step 1: Environment Staging 
 
 
-** Before continuing with install, verify the minimum requirements:**  
+**Before continuing with install, verify the minimum requirements**: 
 Verify  host's capacity from the Proxmox shell from Windows:
 
 ```bash
@@ -15,7 +15,7 @@ lsblk
 For a standalone or evaluation deployment of Security Onion on Proxmox VE, allocate at least 4 CPU cores, 32GB of RAM, and 200GB+ of fast local SSD storage. Production or higher-traffic setups require scaling up resources significantly based on packet capture and Elasticsearch indexing loads
 
 
-**1.1 Download ISO and move it to Proxmox **
+**1.1 Download ISO and move it to Proxmox**
 
 Download the Security Onion ISO image by following the official [Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD_AND_VERIFY_ISO.md).
 
