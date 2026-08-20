@@ -39,6 +39,74 @@ Check the exact ISO name in local storage
 ```bash
 pvesm list local --content iso
 pvesm status
+<<<<<<< HEAD
+=======
+
+```
+
+![Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
+
+Before booting the Security Onion ISO...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Before booting the Security Onion ISO,configure the virtual hardware to match the required network segmentation and storage layout.
+
+You can verify the Proxmox host's available resources from the Proxmox shell.
+
+### Verify Proxmox Host Resources
+
+```
+ssh root@lab
+
+lscpu
+pvesh get /nodes/localhost/status
+free -h
+df -h
+>>>>>>> 88cb09af89039c28c4d8fb6f9bfb0b96a9c4a02d
 lsblk
 ```
 
