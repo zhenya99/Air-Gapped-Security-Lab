@@ -64,7 +64,7 @@ pvesm status
 
 ```
 
-!\[Disk](images/Proxmox/disk\_usage.png)
+!\[Disk](images/Proxmox/disk\_usage.jpg)
 
 Before booting the Security Onion ISO...
 
