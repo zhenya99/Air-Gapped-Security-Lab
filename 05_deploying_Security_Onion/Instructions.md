@@ -113,12 +113,21 @@ qm config 900
 ![Disk](/images/Proxmox/verify_vm.png)
 
 **What Got Missed:**
-* **Boot Order:** It currently says boot: `order=ide2`. It is missing the `;scsi0` part. While it will successfully boot from the ISO to allow the OSinstall, Proxmox won't know to boot from the actual hard drive once the installation finishes and the VM reboots.
-* **QEMU Guest Agent:** The `agent: 1` flag is missing. The QEMU Guest Agent is a small background service that runs inside your virtual machine's operating system. It acts as a direct communication bridge between the Proxmox host and the Security Onion VM.Here is why enabling it is considered a best practice for a lab:
-*    **Graceful Shutdowns**: Without the agent, telling Proxmox to "Shutdown" the VM is the equivalent of pulling the power cord out of the wall. With the agent enabled, Proxmox sends a polite shutdown command to the OS, allowing Security Onion to safely close its databases (like Elasticsearch and Zeek logs) without corrupting your data.
-*    **IP Address Visibility**:The agent pushes the VM's active IP address directly to the Proxmox Web GUI summary page. This saves you from having to log into the VM console just to figure out what IP address it is using.
-*    **Application-Consistent Backups**: If you ever take a snapshot or run a Proxmox backup of this VM, the agent tells the OS to briefly pause and flush all pending data to the disk. This ensures your backups are completely stable and not captured in the middle of a file write.
+
+* **Boot Order:** It currently says `boot: order=ide2`. It is missing the `;scsi0` part. While it will successfully boot from the ISO to allow the OS install, Proxmox won't know to boot from the actual hard drive once the installation finishes and the VM reboots.
+
+* **QEMU Guest Agent:** The `agent: 1` flag is missing. The QEMU Guest Agent is a small background service that runs inside your virtual machine's operating system. It acts as a direct communication bridge between the Proxmox host and the Security Onion VM. Here is why enabling it is considered a best practice for a lab:
+
+  * **Graceful Shutdowns:** Without the agent, telling Proxmox to "Shutdown" the VM is the equivalent of pulling the power cord out of the wall. With the agent enabled, Proxmox sends a polite shutdown command to the OS, allowing Security Onion to safely close its databases (like Elasticsearch and Zeek logs) without corrupting your data.
+
+  * **IP Address Visibility:** The agent pushes the VM's active IP address directly to the Proxmox Web GUI summary page. This saves you from having to log into the VM console just to figure out what IP address it is using.
+
+  * **Application-Consistent Backups:** If you ever take a snapshot or run a Proxmox backup of this VM, the agent tells the OS to briefly pause and flush all pending data to the disk. This ensures your backups are completely stable and not captured in the middle of a file write.
+
 * **Start on Boot:** The `onboot: 1` flag is missing. The `--onboot 1` flag simply tells the Proxmox host: *"Whenever the physical server powers on, automatically start this virtual machine."* Here is why this is specifically important for this type of deployment:
-*    **Continuous Monitoring**:Security Onion acts as the "eyes" of your network, capturing mirrored traffic and generating alerts. If your physical host reboots and the VM stays powered off, you have a complete blind spot in your network until you manually log into Proxmox and hit start.
-*    **Infrastructure Resilience**: If your lab loses power or requires a host-level update, you want your core security infrastructure (like your SIEM and IDS sensors) to come back online autonomously alongside your networking equipment.
-Without this flag (or if it is set to 0), the VM will just sit in a powered-off state after a host reboot, waiting for you to intervene. By adding it, you are ensuring the sensor is always up and listening whenever the server is running.
+
+  * **Continuous Monitoring:** Security Onion acts as the "eyes" of your network, capturing mirrored traffic and generating alerts. If your physical host reboots and the VM stays powered off, you have a complete blind spot in your network until you manually log into Proxmox and hit start.
+
+  * **Infrastructure Resilience:** If your lab loses power or requires a host-level update, you want your core security infrastructure (like your SIEM and IDS sensors) to come back online autonomously alongside your networking equipment.
+
+  Without this flag (or if it is set to `0`), the VM will just sit in a powered-off state after a host reboot, waiting for you to intervene. By adding it, you are ensuring the sensor is always up and listening whenever the server is running.
