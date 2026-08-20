@@ -40,7 +40,7 @@ pvesm status
 ```
 
 
-!\[Disk Usage](images/Proxmox/disk\_usage.png)
+!\[Disk Usage](Air-Gapped-Security-Lab/images/Proxmox/disk\_usage.png)
 
 
 
