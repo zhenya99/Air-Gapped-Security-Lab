@@ -62,7 +62,7 @@ pvesm status
 
 
 
-!\[Disk Usage](C:\\Users\\iefym\\OneDrive\\Documents\\Air-Gapped-Security-Lab\\images\\Proxmoxdisk\_usage.png)
+!\[Disk Usage](C:\\Users\\iefym\\OneDrive\\Documents\\Air-Gapped-Security-Lab\\images\\Proxmox\\disk\_usage.png)
 
 
 
