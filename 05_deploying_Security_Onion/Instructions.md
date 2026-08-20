@@ -130,4 +130,22 @@ qm config 900
 
   * **Infrastructure Resilience:** If your lab loses power or requires a host-level update, you want your core security infrastructure (like your SIEM and IDS sensors) to come back online autonomously alongside your networking equipment.
 
-  Without this flag (or if it is set to `0`), the VM will just sit in a powered-off state after a host reboot, waiting for you to intervene. By adding it, you are ensuring the sensor is always up and listening whenever the server is running.
+  Without this flag (or if it is set to `0`), the VM will just sit in a powered-off state after a host reboot, waiting for you to intervene. By adding it, the sensor is always up and listening whenever the server is running.
+
+**To fix this, run:**
+```bash
+qm set 900 --boot "order=ide2;scsi0" --agent 1 --onboot 1
+```
+Once done, verify the configuration:
+``` bash
+qm config 900
+```
+![Disk](/images/Proxmox/final_verify.png)
+Everything from the CPU and memory allocation to the network bridges and the external SSD storage is exactly where it needs to be.
+
+**2.2 Verify VM's configuration**
+```bash 
+qm start 900
+```
+![Disk](/images/Proxmox/vm_fin.png)
+
