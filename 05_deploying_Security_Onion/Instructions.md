@@ -80,8 +80,7 @@ With the external SSD fully initialized, we can provision the VM directly from t
 
 
 
-** 2.1 Create a VM**
-
+**2.1 Create a VM**
 *Run the following command to with ID `900` (adjust the ID as needed for your lab environment):*
 
 ```bash
@@ -100,10 +99,11 @@ qm create 900 \
   --onboot 1
 ```
 
-![Disk](/images/Proxmox/Provisioning.png)
-
 You can see the Proxmox backend doing exactly what it was supposed to do:
 
 * Logical volume "vm-900-disk-0" created.
 * scsi0: successfully created disk...
+
+![Disk](/images/Proxmox/Provisioning.png)
+
 
