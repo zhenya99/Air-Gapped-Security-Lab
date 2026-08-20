@@ -67,13 +67,13 @@ wipefs -a /dev/sda
 sgdisk --zap-all /dev/sda
 ```
 
-![Wipe External SSD](/images/Proxmox/disk_wipe.png)
-
 After completing this step, verify that the existing partition information has been removed:
 
 ```bash
 lsblk
 ```
+![Wipe External SSD](/images/Proxmox/disk_wipe.png)
+
 
 ---
 
