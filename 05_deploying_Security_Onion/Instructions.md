@@ -40,7 +40,7 @@ pvesm status
 
 ```
 
-!\[Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
+![Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\_usage.jpg?raw=true)
 
 
 
