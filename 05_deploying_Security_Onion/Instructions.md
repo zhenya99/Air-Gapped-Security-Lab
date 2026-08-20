@@ -28,6 +28,8 @@ scp "C:\\\\Users\\\\YourUser\\\\Downloads\\\\securityonion-3.2.0.iso" root@172.1
 
 
 
+
+
 Step 1: Verify the ISO and Storage Pool
 
 Check the exact ISO name in local storage
