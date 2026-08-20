@@ -102,6 +102,18 @@ qm create 900 \
 ![Disk](/images/Proxmox/Provisioning.png)
 
 You can see the Proxmox backend doing exactly what it was supposed to do:
-
 * Logical volume "vm-900-disk-0" created.
 * scsi0: successfully created disk...
+
+**2.2 Verify VM's configuration**
+```bash
+qm config 900
+```
+
+![Disk](/images/Proxmox/verify_vm.png)
+
+**What Got Missed:**
+* **Boot Order:** It currently says boot: `order=ide2`. It is missing the `;scsi0` part. While it will successfully boot from the ISO to let you install the OS, it won't know to boot from the actual hard drive once the installation finishes and the VM reboots.
+* **QEMU Guest Agent:** The `agent: 1` flag is missing.
+* **Start on Boot:** The `onboot: 1` flag is missing.
+
