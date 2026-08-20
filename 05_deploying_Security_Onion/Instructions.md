@@ -141,6 +141,7 @@ Once done, verify the configuration:
 qm config 900
 ```
 ![Disk](/images/Proxmox/final_verify.png)
+
 Everything from the CPU and memory allocation to the network bridges and the external SSD storage is exactly where it needs to be.
 
 **2.2 Verify VM's configuration**
