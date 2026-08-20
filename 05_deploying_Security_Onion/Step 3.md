@@ -30,7 +30,7 @@ yes
 
 and press **Enter**.
 
-![Security Onion OS Installation Warning](images/Proxmox/os_warning.png)
+![Security Onion OS Installation Warning](/images/Proxmox/os_warning.png)
 
 > **⚠️ Important:** Verify that the installer is targeting the intended Security Onion VM disk before confirming. The installation process will erase the selected disk.
 
@@ -42,7 +42,7 @@ The base operating-system installation will initialize and prompt you to create 
 
 Follow the on-screen prompts to configure the account.
 
-> **Note:** Store these credentials securely. This account is used for backend operating-system access and will be required to run the `so-setup` wizard during the next phase of the deployment. It is separate from the web-based SOC administrator account.
+> **Note:** Store these credentials securely. This account is used for backend operating-system access and will be required to run the `so-setup` wizard during the next phase of the deployment. It is separate from the web-based Security Onion SOC administrator account.
 
 ---
 
@@ -54,7 +54,7 @@ When the installer indicates that the installation has finished, press **Enter**
 
 The VM will reboot and load the newly installed operating system.
 
-![Security Onion OS Installation](images/Proxmox/s_o_install.png)
+![Security Onion OS Installation](/images/Proxmox/s_o_install.png)
 
 After the reboot, the VM should arrive at the Security Onion command-line interface.
 
