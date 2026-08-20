@@ -42,7 +42,7 @@ pvesm status
 lsblk
 ```
 
-!\[Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk\\\_usage.jpg?raw=true)
+!\[Disk](images/Proxmox/disk.usage.jpg)
 
 
 
