@@ -20,6 +20,7 @@ lsblk
 
 Download the Security Onion ISO image by following the official [Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD_AND_VERIFY_ISO.md).
 
+
 **Open PowerShell on your Windows 11 machine**. 
 
 Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
@@ -27,6 +28,7 @@ Run the following command, replacing the Windows path with the exact location of
 ```bash
 scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
 ```
+
 
 **Check the exact ISO name in local storage:**
 
@@ -50,6 +52,7 @@ wipefs -a /dev/sda
 sgdisk --zap-all /dev/sda
 ```
 ![Disk](/images/Proxmox/disk_wipe.png)
+
 
 **1.3 Create a New Full-Disk Partition**
 ```bash
