@@ -1,33 +1,35 @@
 # Deploying Security Onion v3.2.0
 
-Deploying Security Onion 3.2.x requires precise interface alignment to ensure that mirrored VLAN 10 traffic successfully reaches the Suricata and Zeek sensors.
+Deploying Security Onion 3.2.x requires precise interface alignment to ensure that mirrored VLAN 10 traffic successfully reaches the Suricata and Zeek sensors. 
 
+This module breaks down the deployment process from bare-metal hypervisor preparation to the final SOC dashboard configuration.
 
-## VM Provisioning in Proxmox
+---
 
-Download the Security Onion ISO image by following the official [Security Onion ISO Download and Verification Guide](https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD_AND_VERIFY_ISO.md).
+## 🏗️ Architecture & Prerequisites
 
-**Open PowerShell on your Windows 11 machine.**
-Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
+Before beginning the deployment, ensure your host environment has the capacity to support a standalone Security Onion instance.
 
-```bash
+**My Lab Hardware Setup:**
+* **CPU:** Intel i7-12700K (12 physical cores / 20 logical threads).
+* **Memory:** 46GB Total RAM.
+* **Storage:** 240GB internal SSD (Host OS) & 1TB external SSD (VM Datastores).
 
-scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
+### 💡 Useful Pointers for Proxmox Users
+* **CPU Passthrough:** You must change the VM CPU type from Proxmox's default `kvm64` to `host`. This allows the Intrusion Detection System (Suricata) to utilize your processor's advanced instruction sets for faster packet inspection.
+* **Memory Allocation:** Security Onion requires a strict minimum of 24GB for a standalone deployment. **Disable Memory Ballooning** in Proxmox to ensure the VM's RAM is not dynamically reallocated to other containers.
+* **Network Bridging:** The capture interface must be attached to a bridge that does not have a VLAN tag assigned, and the Proxmox firewall must be **unchecked** for that specific interface to allow promiscuous traffic sniffing.
 
-```
+---
 
-Before booting the ISO, configure the virtual hardware to match the network segmentation and storage layout. Verify  host's capacity from the Proxmox shell from Windows:
+## 📑 Deployment Guide
 
-```bash
-ssh root@lab
-lscpu
-pvesh get /nodes/localhost/status
-free -h
-df -h
-lsblk
-```
-I am running an **i7-12700K**, which features *12 physical cores (8 Performance, 4 Efficient) and hyper-threading*, meaning Proxmox actually has 20 logical threads to work with. The host also features **46GB** of memory, a **240GB** internal SSD, and a **1TB** external SSD.
+Follow these modules in order to provision, install, and configure the sensor:
 
-
-
+* **[Step 1: Proxmox Environment & Storage Preparation](Step%201.md)**
+  * *Uploading the ISO, verifying host capacity, and configuring LVM-Thin storage pools.*
+* **[Step 2: Virtual Machine Provisioning & OS Install](Step%202.md)**
+  * *Configuring the virtual hardware blueprint and installing the base Oracle/CentOS operating system.*
+* **[Step 3: The so-setup Wizard & Elastic Stack](Step%203.md)**
+  * *Binding the management/capture interfaces and deploying the Kibana SOC dashboard.*
 
