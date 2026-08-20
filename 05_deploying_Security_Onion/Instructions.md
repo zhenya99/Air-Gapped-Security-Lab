@@ -23,6 +23,7 @@ Check the exact ISO name in local storage
 ```bash
 pvesm list local --content iso
 pvesm status
+lsblk
 
 ```
 ![Disk](https://github.com/zhenya99/Air-Gapped-Security-Lab/blob/main/images/Proxmox/disk_usage.jpg?raw=true)
