@@ -41,7 +41,7 @@ lsblk
 ```
 ![Disk](/images/Proxmox/disk_usage.png)
 
-The 1TB external drive (sda) currently contains old partitions and needs to be formatted before Proxmox can use it for the Security Onion VM. To fix this, wipe the disk, initialize it as a Physical Volume, and create an LVM-Thin pool for optimized virtual machine storage.
+*The 1TB external drive (sda) currently contains old partitions and needs to be formatted before Proxmox can use it for the Security Onion VM. To fix this, wipe the disk, initialize it as a Physical Volume, and create an LVM-Thin pool for optimized virtual machine storage. (see below)*
 
 
 **1.2 Wipe the Existing Partition Table**
