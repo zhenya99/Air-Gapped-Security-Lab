@@ -2,11 +2,113 @@
 
 Deploying Security Onion 3.2.x requires precise interface alignment to ensure that mirrored **VLAN 10** traffic successfully reaches the **Suricata** and **Zeek** sensors.
 
----
+\---
 
-## 1. VM Provisioning in Proxmox
+## 1\. VM Provisioning in Proxmox
 
-Before booting the Security Onion ISO, configure the virtual hardware to match the required network segmentation and storage layout.
+Download the ISO image from an official https://github.com/Security-Onion-Solutions/securityonion/blob/3/main/DOWNLOAD\_AND\_VERIFY\_ISO.md to the Windows host. 
+
+Open PowerShell on your Windows 11 machine.
+
+
+
+Run this exact command (replace the path with exactly where the ISO is on your Windows machine):
+
+
+
+Bash
+
+scp C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso root@172.16.99.20:/var/lib/vz/templat
+
+
+
+Step 1: Verify the ISO and Storage Pool
+
+# Check the exact ISO name in local storage
+
+pvesm list local --content iso
+
+
+
+\# Verify available space on your external drive
+
+pvesm list localnetwork
+
+
+
+!\[Disk Usage](.\\images\\disk\_usage.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Before booting the Security Onion ISO,configure the virtual hardware to match the required network segmentation and storage layout.
 
 You can verify the Proxmox host's available resources from the Proxmox shell.
 
@@ -37,15 +139,15 @@ The lab host is equipped with:
 
 ### Security Onion 3.2.0 VM Blueprint
 
-| Resource           | Configuration                             |
-| ------------------ | ----------------------------------------- |
-| **CPU**            | 8–12 cores                                |
-| **CPU Type**       | `host`                                    |
-| **Memory**         | 24–28 GB                                  |
-| **Ballooning**     | Disabled                                  |
-| **Storage**        | 250–500 GB on the 1 TB external SSD       |
-| **Management NIC** | `vmbr0` / VLAN `99` / Firewall enabled    |
-| **Capture NIC**    | `vmbr1` / No VLAN tag / Firewall disabled |
+|Resource|Configuration|
+|-|-|
+|**CPU**|8–12 cores|
+|**CPU Type**|`host`|
+|**Memory**|24–28 GB|
+|**Ballooning**|Disabled|
+|**Storage**|250–500 GB on the 1 TB external SSD|
+|**Management NIC**|`vmbr0` / VLAN `99` / Firewall enabled|
+|**Capture NIC**|`vmbr1` / No VLAN tag / Firewall disabled|
 
 ### CPU Configuration
 
@@ -117,11 +219,11 @@ Firewall:  Disabled
 Purpose:   Mirrored network traffic capture
 ```
 
-> **Important:** The capture interface should remain dedicated to monitoring traffic. Do not assign a management IP address to this interface.
+> \*\*Important:\*\* The capture interface should remain dedicated to monitoring traffic. Do not assign a management IP address to this interface.
 
----
+\---
 
-## 2. Base OS Installation
+## 2\. Base OS Installation
 
 ### Step 1 — Boot the Installation ISO
 
@@ -137,7 +239,7 @@ Install Security Onion
 
 The operating-system installer will prompt you to create an administrative OS user and password.
 
-> **Note:** Store these credentials securely. They are required for administrative tasks and for running the Security Onion setup process.
+> \*\*Note:\*\* Store these credentials securely. They are required for administrative tasks and for running the Security Onion setup process.
 
 ### Step 3 — Complete the Installation
 
@@ -151,9 +253,9 @@ Enter
 
 The VM will reboot.
 
----
+\---
 
-## 3. The `so-setup` Wizard
+## 3\. The `so-setup` Wizard
 
 After the VM reboots, log back in at the terminal using the administrative OS credentials created during the base installation.
 
@@ -172,7 +274,7 @@ Select the **Management Interface**, which should be the first virtual network i
 Depending on the VM's interface naming, it may appear as:
 
 ```
-ens18
+ens1
 ```
 
 or:
@@ -181,23 +283,23 @@ or:
 eth0
 ```
 
-> **Important:** Verify the actual interface name in the VM rather than assuming `ens18` or `eth0`.
+> \*\*Important:\*\* Verify the actual interface name in the VM rather than assuming `ens18` or `eth0`.
 
 ### Configure a Static IP Address
 
 Configure the management interface with the following settings:
 
-| Setting         | Value                       |
-| --------------- | --------------------------- |
-| **IP Address**  | `172.16.99.30`              |
-| **Subnet Mask** | `255.255.255.0`             |
-| **Gateway**     | `172.16.99.1`               |
-| **DNS**         | `8.8.8.8` or local resolver |
+|Setting|Value|
+|-|-|
+|**IP Address**|`172.16.99.30`|
+|**Subnet Mask**|`255.255.255.0`|
+|**Gateway**|`172.16.99.1`|
+|**DNS**|`8.8.8.8` or local resolver|
 
 The resulting management network is:
 
 ```
-Network:          172.16.99.0/24
+Network:         172.16.99.0/24
 Security Onion:  172.16.99.30
 Gateway:         172.16.99.1
 ```
@@ -208,9 +310,9 @@ After completing the network configuration, reboot the VM:
 sudo reboot
 ```
 
----
+\---
 
-## 4. Sensor Application Setup
+## 4\. Sensor Application Setup
 
 After the VM reboots, log back in and launch the Security Onion setup wizard:
 
@@ -256,7 +358,7 @@ or:
 eth1
 ```
 
-> **Important:** Verify that this is the dedicated capture interface connected to `vmbr1`. It should not be used as the Security Onion management interface.
+> \*\*Important:\*\* Verify that this is the dedicated capture interface connected to `vmbr1`. It should not be used as the Security Onion management interface.
 
 ### Step 3 — Configure the SOC Administrator
 
@@ -277,9 +379,9 @@ The installation may take some time while the required container images and serv
 
 Do not interrupt the process while deployment is in progress.
 
----
+\---
 
-## 5. Access the Security Onion SOC
+## 5\. Access the Security Onion SOC
 
 Once the setup process has completed, access the Security Onion web interface from the Windows workstation.
 
@@ -293,9 +395,9 @@ Authenticate using the administrator credentials created during the Security Oni
 
 The management interface should provide access to the Security Onion SOC, while the dedicated capture interface receives the mirrored network traffic for inspection.
 
----
+\---
 
-## 6. Expected Network Architecture
+## 6\. Expected Network Architecture
 
 The completed configuration should follow this basic architecture:
 
@@ -335,3 +437,4 @@ The intended separation is:
 * **VLAN 10:** Mirrored traffic sent to the dedicated monitoring interface
 * **NIC 1:** Management and SOC access
 * **NIC 2:** Packet capture and network monitoring
+
