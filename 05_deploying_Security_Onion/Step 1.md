@@ -2,7 +2,8 @@
 
 
 **Before continuing with install, verify the minimum requirements**: 
-Verify  host's capacity from the Proxmox shell from Windows:
+
+Verify  host's capacity from the Proxmox shell in Windows:
 
 ```bash
 ssh root@lab
