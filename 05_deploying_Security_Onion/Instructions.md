@@ -54,7 +54,15 @@ Run:
 
 
 
+Run:
+
+
+
+```bash
+
 pvesm status
+
+```
 
 
 
@@ -63,8 +71,6 @@ pvesm status
 
 
 Before booting the Security Onion ISO...
-
-
 
 
 
