@@ -14,57 +14,9 @@ Open PowerShell on your Windows 11 machine.
 
 
 
-Run the following command, replacing the Windows path with the exact location of the ISO file on your machine:
 
 
-
-```bash
-
-scp "C:\\Users\\YourUser\\Downloads\\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso
-
-```
-
-
-
-\## Step 1: Verify the ISO and Storage Pool
-
-
-
-\### Check the exact ISO name in local storage
-
-
-
-Run:
-
-
-
-```bash
-
-pvesm list local --content iso
-
-```
-
-
-
-\### Verify available storage and resources on the Proxmox host
-
-
-
-Run:
-
-
-
-```bash
-
-pvesm status
-
-```
-
-
-
-!\[Disk Usage](C:\\Users\\iefym\\OneDrive\\Documents\\Air-Gapped-Security-Lab\\images\\Proxmox\\disk\_usage.png)
-
-
+!\[Disk Usage](images/Proxmox/disk\_usage.png)
 
 
 
