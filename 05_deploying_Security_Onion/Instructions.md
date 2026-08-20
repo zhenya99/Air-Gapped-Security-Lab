@@ -99,11 +99,9 @@ qm create 900 \
   --onboot 1
 ```
 
+![Disk](/images/Proxmox/Provisioning.png)
+
 You can see the Proxmox backend doing exactly what it was supposed to do:
 
 * Logical volume "vm-900-disk-0" created.
 * scsi0: successfully created disk...
-
-![Disk](/images/Proxmox/Provisioning.png)
-
-
