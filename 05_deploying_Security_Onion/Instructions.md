@@ -54,19 +54,15 @@ Run:
 
 
 
-```bash
-
 pvesm status
 
-```
+
+
+!\[Disk Usage](images/Proxmox/disk\_usage.png)
 
 
 
-<img src="./images/Proxmox/disk\_usage.png" alt="Disk Usage" />
-
-**!\[Disk Usage](images/Proxmox/disk\_usage.png)**
-
-
+Before booting the Security Onion ISO...
 
 
 
