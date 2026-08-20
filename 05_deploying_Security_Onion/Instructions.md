@@ -30,7 +30,8 @@ I am running an **i7-12700K**, which features *12 physical cores (8 Performance,
 
 
 
-**Step 1: Verify the ISO and Storage Pool**
+### Step 1: Verifying the ISO and Storage Pool
+
 Check the exact ISO name in local storage
 
 ```bash
@@ -144,9 +145,35 @@ qm config 900
 
 Everything from the CPU and memory allocation to the network bridges and the external SSD storage is exactly where it needs to be.
 
-**2.2 Verify VM's configuration**
+
+**2.3 Start the VM and verify in Proxmox Web GUI**
 ```bash 
 qm start 900
 ```
 ![Disk](/images/Proxmox/vm_fin.png)
+
+
+## Step 3. Base OS Installation
+
+With the VM powered on, navigate to the **Console** tab in the Proxmox Web GUI to interact with the virtual machine and begin the installation.
+
+### Step 1: Boot the Installation ISO
+
+The VM will automatically boot from the attached ISO. When the GRUB boot menu appears, select the default option:
+
+`Install Security Onion`
+
+### Step 2: Create the Administrative OS Account
+
+The base CentOS/Oracle Linux installer will initialize. Follow the on-screen prompts to create your administrative OS user account and password. 
+
+> **Note:** Store these credentials securely. This account is strictly for backend operating system access and will be required to run the `so-setup` wizard in the next phase. This is separate from your web-based SOC administrator account.
+
+### Step 3: Complete the Installation
+
+Allow the base OS installation to complete. The installer will partition the 250 GB `ext-ssd` disk and unpack the core operating system files. 
+
+When the installation finishes, the system will prompt you to reboot. Press `Enter` to confirm. 
+
+As the VM restarts, it will bypass the ISO (due to the `order=ide2;scsi0` boot configuration we set earlier) and boot directly into your newly installed Security Onion command-line interface.
 
