@@ -78,7 +78,11 @@ pvesm add lvmthin ext-ssd --vgname ext-ssd-vg --thinpool ext-ssd-thin
 
 With the external SSD fully initialized, we can provision the VM directly from the Proxmox shell. This `qm create` command maps our exact hardware blueprint—allocating the `host` CPU architecture, 24 GB of dedicated RAM, bridging the specific network interfaces, and assigning 250 GB of storage on the newly created `ext-ssd` pool.
 
-Run the following command to create a VM with ID `900` (adjust the ID as needed for your lab environment):
+
+
+** 2.1 Create a VM**
+
+*Run the following command to with ID `900` (adjust the ID as needed for your lab environment):*
 
 ```bash
 qm create 900 \
