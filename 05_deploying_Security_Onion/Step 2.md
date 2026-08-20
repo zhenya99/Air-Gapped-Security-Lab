@@ -121,28 +121,3 @@ Verify that:
 
 ---
 
-# Step 3: Base OS Installation
-
-With the VM powered on, navigate to the **Console** tab in the Proxmox Web GUI to interact with the virtual machine and begin the Security Onion installation.
-
-### 3.1 Boot the Installation ISO
-
-The VM should boot from the attached Security Onion installation ISO.
-
-When the GRUB boot menu appears, select:
-
-```text
-Install Security Onion
-```
-
-The installer will begin loading the base operating system and Security Onion installation environment.
-
-### 3.2 Create the Administrative OS Account
-
-The base operating-system installer will initialize. Follow the on-screen prompts to create the administrative OS user account and password.
-
-> **Note:** Store these credentials securely. This account is used for backend operating-system access and will be required when performing administrative tasks from the Security Onion terminal. It is separate from the web-based Security Onion SOC administrator account that will be configured later.
-
-After the base operating-system installation completes, allow the VM to reboot.
-
-Once the installation ISO is no longer required, verify that the VM boots from the installed `scsi0` disk according to the configured boot order.
