@@ -1,3 +1,90 @@
+# Step 5: Complete and Validate Security Onion 3.2.0
+---
+
+> **Troubleshooting Scenario:** Under normal circumstances, the Security Onion setup wizard automates the entire deployment process. However, because this lab environment is strictly air-gapped, the automated installation crashed. The setup scripts attempted to reach the internet to seed the Docker registry, failing instantly and leaving the system with a fractured SaltStack configuration and missing Elasticsearch dependencies. **The following steps detail the manual troubleshooting, backend recovery, and configuration engineering required to fix the broken installation and successfully bring the SIEM online.**
+
+---
+
+**This final deployment stage transitions the Security Onion VM from a broken base installation into a fully operational security monitoring platform.**
+
+At this point, the operating system and core Security Onion components are installed. The remaining work is to restore the offline container registry, synchronize Elasticsearch authentication, start the dependent services, and verify that the entire platform is operating correctly.
+
+---
+
+## 5.1 Recover and Mount the Offline Docker Registry
+---
+
+Because this lab operates in an air-gapped environment, the Security Onion VM cannot reach external container registries to download the images it needs. Fortunately, the Security Onion installation ISO contains the required registry data:
+
+```text
+/docker/registry.tar
+/docker/registry_image.tar
+```
+
+These files allow the local Docker registry to be restored without Internet access. Create a temporary mount point and attach the ISO in read-only mode:
+
+```bash
+mkdir -p /mnt/securityonion-iso
+mount -o ro /dev/sr0 /mnt/securityonion-iso
+```
+
+The `-o ro` option mounts the ISO as read-only, which prevents accidental changes to the installation media. Verify that the registry files are present:
+
+```bash
+ls -lh /mnt/securityonion-iso/docker/
+```
+
+You should see `registry.tar` and `registry_image.tar` in the output.
+
+---
+
+## 5.2 Stage and Verify the Registry Files
+---
+
+Create the directory where Security Onion expects the registry data and copy the archives over:
+
+```bash
+mkdir -p /nsm/docker-registry/docker
+
+cp -v /mnt/securityonion-iso/docker/registry.tar \
+  /nsm/docker-registry/docker/
+
+cp -v /mnt/securityonion-iso/docker/registry_image.tar \
+  /nsm/docker-registry/docker/
+```
+
+Verify the files were copied successfully:
+
+```bash
+ls -lh /nsm/docker-registry/docker/
+```
+
+A SHA-256 hash acts like a digital fingerprint for a file. To ensure the archives were not corrupted during the transfer, verify the hashes of both the source and destination files. 
+
+Check `registry.tar`:
+
+```bash
+sha256sum /mnt/securityonion-iso/docker/registry.tar
+sha256sum /nsm/docker-registry/docker/registry.tar
+```
+
+Check `registry_image.tar`:
+
+```bash
+sha256sum /mnt/securityonion-iso/docker/registry_image.tar
+sha256sum /nsm/docker-registry/docker/registry_image.tar
+```
+
+The matching hashes confirm that the files were copied without corruption. Finally, confirm that the archive contains a real Docker Registry data structure:
+
+```bash
+tar -tf /nsm/docker-registry/docker/registry.tar | head -30
+```
+
+> **Important:** The expected output should include paths such as `registry/` and `registry/v2/`. Do not proceed if the archive is missing or the SHA-256 hashes do not match.
+
+---
+
 ## 5.3 Initialize the Local Image Repository
 ---
 
