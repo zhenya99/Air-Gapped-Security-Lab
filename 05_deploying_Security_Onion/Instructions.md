@@ -62,7 +62,7 @@ sgdisk -N 1 /dev/sda
 ![Disk](/images/Proxmox/partition.png)
 
 
-**Initialize the LVM structures and register with Proxmox**
+**1.3 Initialize the LVM structures and register with Proxmox**
 ```bash
 pvcreate /dev/sda1
 vgcreate ext-ssd-vg /dev/sda1
@@ -71,4 +71,27 @@ pvesm add lvmthin ext-ssd --vgname ext-ssd-vg --thinpool ext-ssd-thin
 ```
 ![Disk](/images/Proxmox/LVM.png)
 
+(A quick side note on those terminal warnings: Do not worry about the optimal_io_size or Pool zeroing warnings. Those are completely standard when formatting external SSDs over USB/SATA adapters in Linux. Proxmox handles them gracefully, and it won't impact Security Onion performance at all.)
 
+
+### Step 2: Provision the Virtual Machine via CLI
+
+With the external SSD fully initialized, we can provision the VM directly from the Proxmox shell. This `qm create` command maps our exact hardware blueprint—allocating the `host` CPU architecture, 24 GB of dedicated RAM, bridging the specific network interfaces, and assigning 250 GB of storage on the newly created `ext-ssd` pool.
+
+Run the following command to create a VM with ID `900` (adjust the ID as needed for your lab environment):
+
+```bash
+qm create 900 \
+  --name SecurityOnion-3.2 \
+  --ostype l26 \
+  --cpu host --cores 8 \
+  --memory 24576 --balloon 0 \
+  --net0 virtio,bridge=vmbr0,tag=99,firewall=1 \
+  --net1 virtio,bridge=vmbr1,firewall=0 \
+  --scsihw virtio-scsi-pci \
+  --scsi0 ext-ssd:250,discard=on,ssd=1 \
+  --ide2 local:iso/securityonion-3.2.0.iso,media=cdrom \
+  --boot order=ide2;scsi0 \
+  --agent 1 \
+  --onboot 1
+'''
