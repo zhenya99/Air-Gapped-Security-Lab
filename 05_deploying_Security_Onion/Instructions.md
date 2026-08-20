@@ -1,88 +1,337 @@
-Here is the cleaned-up, professionally formatted Markdown code for your GitHub repository.
-
-I fixed the typos (like "IOS" to "ISO" and "Lob back in" to "Log back in"), removed the duplicated paragraph under the OS installation step, fixed the numbering sequence, and dropped your terminal commands into proper `bash` code blocks so they will format beautifully on the web.
-
-You can copy and paste this entire block directly into your GitHub file:
-
-```markdown
 # Deploying Security Onion v3.2.0
 
-Deploying Security Onion 3.2.x requires precise interface alignment to ensure the mirrored VLAN 10 traffic successfully reaches the Suricata and Zeek sensors.
+Deploying Security Onion 3.2.x requires precise interface alignment to ensure that mirrored **VLAN 10** traffic successfully reaches the **Suricata** and **Zeek** sensors.
 
 ---
 
 ## 1. VM Provisioning in Proxmox
 
-Before booting the ISO, configure the virtual hardware to match the network segmentation and storage layout. You can verify your host's capacity from the Proxmox shell:
+Before booting the Security Onion ISO, configure the virtual hardware to match the required network segmentation and storage layout.
 
-```bash
+You can verify the Proxmox host's available resources from the Proxmox shell.
+
+### Verify Proxmox Host Resources
+
+```
 ssh root@lab
+
 lscpu
 pvesh get /nodes/localhost/status
 free -h
 df -h
 lsblk
-
 ```
 
-*I am running an **i7-12700K**, which features 12 physical cores (8 Performance, 4 Efficient) and hyper-threading, meaning Proxmox actually has 20 logical threads to work with. The host also features **46GB of memory**, a **240GB internal SSD**, and a **1TB external SSD**.*
+### Host Hardware
 
-### The Security Onion 3.2.0 VM Blueprint
+The lab host is equipped with:
 
-* **CPU:** 8 to 12 Cores. (Under the *Advanced* CPU settings in Proxmox, change the CPU type from `kvm64` to `host` so Suricata can fully utilize the i7-12700K's architecture for faster packet inspection).
-* **Memory:** 24 GB to 28 GB (24576 MB - 28672 MB). Disable "Ballooning" so the memory is strictly locked to this VM, as 24 GB is the required minimum for a standalone deployment.
-* **Storage:** 250GB to 500GB provisioned entirely on your 1TB external drive.
-* **Network Device 1 (Management):** Bridge `vmbr0` | VLAN Tag: `99` | Firewall: **Checked**
-* **Network Device 2 (Capture):** Bridge `vmbr1` | VLAN Tag: `<Leave Blank>` | Firewall: **Unchecked**
+* **CPU:** Intel Core i7-12700K
+
+  * 8 Performance cores
+  * 4 Efficient cores
+  * 20 logical threads with Hyper-Threading
+* **Memory:** 46 GB RAM
+* **Internal Storage:** 240 GB SSD
+* **External Storage:** 1 TB SSD
+
+### Security Onion 3.2.0 VM Blueprint
+
+| Resource           | Configuration                             |
+| ------------------ | ----------------------------------------- |
+| **CPU**            | 8–12 cores                                |
+| **CPU Type**       | `host`                                    |
+| **Memory**         | 24–28 GB                                  |
+| **Ballooning**     | Disabled                                  |
+| **Storage**        | 250–500 GB on the 1 TB external SSD       |
+| **Management NIC** | `vmbr0` / VLAN `99` / Firewall enabled    |
+| **Capture NIC**    | `vmbr1` / No VLAN tag / Firewall disabled |
+
+### CPU Configuration
+
+Allocate **8–12 CPU cores** to the Security Onion VM.
+
+In the Proxmox **Advanced CPU** settings, change the CPU type from:
+
+```
+kvm64
+```
+
+to:
+
+```
+host
+```
+
+This exposes the host CPU's available features to the virtual machine and can improve processing performance for workloads such as Suricata packet inspection.
+
+### Memory Configuration
+
+Allocate:
+
+```
+24–28 GB RAM
+```
+
+Equivalent values:
+
+```
+24576 MB – 28672 MB
+```
+
+Disable **Memory Ballooning** so the assigned memory remains dedicated to the Security Onion VM.
+
+### Storage Configuration
+
+Allocate approximately:
+
+```
+250–500 GB
+```
+
+Provision the Security Onion storage on the **1 TB external SSD**.
+
+This provides additional space for:
+
+* Suricata alerts
+* Zeek logs
+* Network metadata
+* Security Onion application data
+* Search and analysis data
+
+### Network Device 1 — Management
+
+```
+Bridge:    vmbr0
+VLAN Tag:  99
+Firewall:  Enabled
+Purpose:   Security Onion management and SOC access
+```
+
+### Network Device 2 — Capture
+
+```
+Bridge:    vmbr1
+VLAN Tag:  <Leave Blank>
+Firewall:  Disabled
+Purpose:   Mirrored network traffic capture
+```
+
+> **Important:** The capture interface should remain dedicated to monitoring traffic. Do not assign a management IP address to this interface.
 
 ---
 
 ## 2. Base OS Installation
 
-1. Boot the VM using the Security Onion 3.2.0 ISO and select **Install Security Onion** from the GRUB menu.
-2. The CentOS/Oracle Linux installer will prompt you to create an administrative OS user and password. *(Note: Document these securely, as they are required to execute the setup wizard later).*
-3. Allow the base OS installation to complete. Press **Enter** to reboot when prompted.
+### Step 1 — Boot the Installation ISO
+
+Boot the Security Onion VM using the **Security Onion 3.2.0 ISO**.
+
+From the GRUB menu, select:
+
+```
+Install Security Onion
+```
+
+### Step 2 — Create the Administrative OS Account
+
+The operating-system installer will prompt you to create an administrative OS user and password.
+
+> **Note:** Store these credentials securely. They are required for administrative tasks and for running the Security Onion setup process.
+
+### Step 3 — Complete the Installation
+
+Allow the base OS installation to complete.
+
+When prompted, press:
+
+```
+Enter
+```
+
+The VM will reboot.
 
 ---
 
 ## 3. The `so-setup` Wizard
 
-When the VM reboots, log in at the terminal prompt using the newly created OS credentials.
+After the VM reboots, log back in at the terminal using the administrative OS credentials created during the base installation.
 
-### Network Configuration:
+### 3.1 Network Configuration
 
-1. Execute the setup script:
-```bash
+Run the Security Onion network configuration utility:
+
+```
 sudo so-setup-network
-
 ```
 
+### Select the Management Interface
 
-2. Select **Management Interface** (the first interface, e.g., `ens18` or `eth0`).
-3. Set a **Static** IP configuration:
-* **IP Address:** `172.16.99.30`
-* **Subnet Mask:** `255.255.255.0`
-* **Gateway:** `172.16.99.1`
-* **DNS:** `8.8.8.8` (or local resolver)
+Select the **Management Interface**, which should be the first virtual network interface.
 
+Depending on the VM's interface naming, it may appear as:
 
-4. Reboot the VM to apply the network bindings.
+```
+ens18
+```
 
-### Sensor Application Setup:
+or:
 
-1. Log back in and execute:
-```bash
+```
+eth0
+```
+
+> **Important:** Verify the actual interface name in the VM rather than assuming `ens18` or `eth0`.
+
+### Configure a Static IP Address
+
+Configure the management interface with the following settings:
+
+| Setting         | Value                       |
+| --------------- | --------------------------- |
+| **IP Address**  | `172.16.99.30`              |
+| **Subnet Mask** | `255.255.255.0`             |
+| **Gateway**     | `172.16.99.1`               |
+| **DNS**         | `8.8.8.8` or local resolver |
+
+The resulting management network is:
+
+```
+Network:          172.16.99.0/24
+Security Onion:  172.16.99.30
+Gateway:         172.16.99.1
+```
+
+After completing the network configuration, reboot the VM:
+
+```
+sudo reboot
+```
+
+---
+
+## 4. Sensor Application Setup
+
+After the VM reboots, log back in and launch the Security Onion setup wizard:
+
+```
 sudo so-setup
-
 ```
 
+### Step 1 — Select the Installation Type
 
-2. Select **Install** -> **Standalone** (Installs SIEM, Suricata, and Zeek locally) -> **Standard**.
-3. Select the **Monitor/Capture Interface** (the second interface, e.g., `ens19` or `eth1`).
-4. Establish the Administrator email address and password for the web-based SOC dashboard (Kibana).
-5. Allow the script to pull and deploy the Elastic Stack Docker containers.
-6. Once complete, navigate to `https://172.16.99.30` from the Windows Station to access the interface.
+Select:
 
 ```
+Install
+```
+
+Then select:
 
 ```
+Standalone
+```
+
+A **Standalone** deployment installs the primary Security Onion components on the same system.
+
+When prompted for the deployment configuration, select:
+
+```
+Standard
+```
+
+### Step 2 — Select the Monitoring Interface
+
+Select the **Monitor/Capture Interface**, which should be the second virtual network interface.
+
+Depending on the interface naming, it may appear as:
+
+```
+ens19
+```
+
+or:
+
+```
+eth1
+```
+
+> **Important:** Verify that this is the dedicated capture interface connected to `vmbr1`. It should not be used as the Security Onion management interface.
+
+### Step 3 — Configure the SOC Administrator
+
+Create the administrator credentials for the Security Onion web-based SOC interface.
+
+Configure:
+
+* **Administrator email address**
+* **Administrator password**
+
+Store these credentials securely.
+
+### Step 4 — Deploy Security Onion Services
+
+Allow the setup process to download and deploy the required Security Onion components.
+
+The installation may take some time while the required container images and services are initialized.
+
+Do not interrupt the process while deployment is in progress.
+
+---
+
+## 5. Access the Security Onion SOC
+
+Once the setup process has completed, access the Security Onion web interface from the Windows workstation.
+
+Open:
+
+```
+https://172.16.99.30
+```
+
+Authenticate using the administrator credentials created during the Security Onion setup.
+
+The management interface should provide access to the Security Onion SOC, while the dedicated capture interface receives the mirrored network traffic for inspection.
+
+---
+
+## 6. Expected Network Architecture
+
+The completed configuration should follow this basic architecture:
+
+```
+Windows Management Station
+          |
+          | VLAN 99
+          |
+          v
+   172.16.99.30
+    Security Onion
+          |
+    +-----+-----+
+    |           |
+  NIC 1       NIC 2
+```
+
+Management    Capture
+|           |
+vmbr0       vmbr1
+|           |
+VLAN 99     VLAN 10
+|
+Mirrored Traffic
+|
++------+------+
+|             |
+Suricata         Zeek
+|             |
++------+------+
+|
+Security Onion SOC
+
+The intended separation is:
+
+* **VLAN 99:** Security Onion management traffic
+* **VLAN 10:** Mirrored traffic sent to the dedicated monitoring interface
+* **NIC 1:** Management and SOC access
+* **NIC 2:** Packet capture and network monitoring
