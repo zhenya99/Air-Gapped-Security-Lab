@@ -93,7 +93,7 @@ exit
 ! Corrected SPAN Session: Mirror Victim traffic (VLAN 10) to Port 28
 no monitor session 1
 monitor session 1 source vlan 10 both
-monitor session 1 destination interface GigabitEthernet1/0/27
+monitor session 1 destination interface GigabitEthernet1/0/28
 
 ! Save configuration
 do write memory
