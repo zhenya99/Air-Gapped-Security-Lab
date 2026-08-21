@@ -571,3 +571,4 @@ Security Onion ens19
 ```
 
 Once all three packet-capture tests show traffic, the Layer 2 monitoring backbone is functioning correctly.
+![Proxmox Disk Usage](/images/Proxmox/backbone.png)
