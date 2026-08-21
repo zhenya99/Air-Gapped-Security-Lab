@@ -1,17 +1,13 @@
 # 🛡️ Engineering an Air-Gapped Stateful Security Lab
 ### *From Raw Attack Traffic to SIEM Detection*
 
-
-
-
-Welcome to my air-gapped security research lab—a custom-engineered environment built on a single, uncompromising principle: **every security control must be observable, testable, and repeatable**.
+Welcome to my air-gapped security research lab—a custom-engineered environment built on a single, uncompromising principle: **every security control must be observable, testable, fault tolerant and easy to converge**.
 
 This isn't just a network simulation. This architecture generates live attack traffic and forces it through genuine security boundaries, putting defensive controls, telemetry pipelines, and response tactics to the test under highly realistic conditions.
 
-By unifying a **Juniper SRX300**, **Cisco Catalyst 2960-X**, **Proxmox VE**, **Kali Linux**, **antiX Linux**, **Security Onion 3.2.0**, **Windows 11**, **Elastic", **Splunk**, the lab operates as a cohesive platform for threat detection and proof-of-concept validation.
+By unifying a Juniper SRX300, Cisco Catalyst 2960-X, Proxmox VE, Kali Linux, antiX Linux, Security Onion 3.2.0, Windows 11, and Splunk, the lab operates as a cohesive platform for threat detection and proof-of-concept validation. 
 
-The ultimate goal is bigger than just proving individual tools work. It's about *achieving complete end-to-end visibility—understanding exactly how traffic flows, where sensors intercept it, the evidence it leaves behind, and how an analyst can use that telemetry to hunt down malicious activity*.
-
+The ultimate goal is bigger than just proving individual tools work. It's about achieving complete end-to-end visibility—understanding exactly how traffic flows, where sensors intercept it, the evidence it leaves behind, and how an analyst can use that telemetry to hunt down malicious activity.
 
 ---
 
@@ -143,8 +139,9 @@ Security Onion Monitoring NIC
 
 > *This project is a practical demonstration of how network engineering, infrastructure security, packet analysis, and SOC operations converge into one observable security system.*
 
-I built this lab around three unbreakable principles:
+I built this lab around four unbreakable principles:
 
-1. ⚙️ **Every control should be configurable.**
-2. 🧪 **Every control should be testable.**
-3. 📊 **Every test should generate evidence.**
+1. 👁️ **Every control must be observable.**
+2. 🧪 **Every control must be testable.**
+3. 🛡️ **Every system must be fault tolerant.**
+4. 🔄 **Every component must be easy to converge.**
