@@ -1,9 +1,17 @@
 # 🛡️ Engineering an Air-Gapped Stateful Security Lab
 ### *From Raw Attack Traffic to SIEM Detection*
 
-Welcome to my isolated security research lab! I built this environment with one core mission: to make every security control **observable, testable, and repeatable**.
 
-Instead of just simulating a network, this architecture forces real attack traffic through real security boundaries. This lab integrates a **Juniper SRX300**, **Cisco Catalyst 2960-X**, **Proxmox VE**, **Kali Linux**, **antiX Linux**, **Security Onion 3.2.0**, **Windows 11**, and **Splunk** into a unified, controlled threat-analysis platform.
+
+
+Welcome to my air-gapped security research lab—a custom-engineered environment built on a single, uncompromising principle: **every security control must be observable, testable, and repeatable**.
+
+This isn't just a network simulation. This architecture generates live attack traffic and forces it through genuine security boundaries, putting defensive controls, telemetry pipelines, and response tactics to the test under highly realistic conditions.
+
+By unifying a **Juniper SRX300**, **Cisco Catalyst 2960-X**, **Proxmox VE**, **Kali Linux**, **antiX Linux**, **Security Onion 3.2.0**, **Windows 11**, **Elastic", **Splunk**, the lab operates as a cohesive platform for threat detection and proof-of-concept validation.
+
+The ultimate goal is bigger than just proving individual tools work. It's about *achieving complete end-to-end visibility—understanding exactly how traffic flows, where sensors intercept it, the evidence it leaves behind, and how an analyst can use that telemetry to hunt down malicious activity*.
+
 
 ---
 
