@@ -37,6 +37,16 @@ Run the following command, replacing the Windows path and filename with the exac
 ```powershell
 scp "C:\Users\YourUser\Downloads\securityonion-3.2.0.iso" root@172.16.99.20:/var/lib/vz/template/iso/
 ```
+Verify the checksum of the file: 
+
+```bash
+cd /var/lib/vz/template/iso/
+ls 
+sha256sum securityonion-3.2.0.iso
+ 
+```
+![Checksum](/images/Proxmox/SecOnion/checksum.png)
+
 
 > **Important:** Replace `YourUser` with your actual Windows username and verify the ISO filename before running the command.
 
@@ -49,6 +59,7 @@ lsblk
 ```
 
 ![Proxmox Disk Usage](/images/Proxmox/disk_usage.png)
+
 
 The `lsblk` output should also allow you to identify the external SSD that will be prepared for Security Onion VM storage.
 
