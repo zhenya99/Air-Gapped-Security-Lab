@@ -1,4 +1,4 @@
-\# The Network Backbone — `/etc/network/interfaces`
+\# Proxmox Network Backbone and Security Onion VM Bindings
 
 
 
@@ -66,8 +66,6 @@ iface lo inet loopback
 
 
 
-
-
 \# ============================================================
 
 \# PHYSICAL INTERFACES
@@ -81,8 +79,6 @@ iface nic0 inet manual
 
 
 iface nic1 inet manual
-
-
 
 
 
@@ -122,8 +118,6 @@ iface vmbr0 inet static
 
 
 
-
-
 \# ============================================================
 
 \# CABLE 2 — SECURITY ONION SPAN / CAPTURE TRAFFIC
@@ -155,8 +149,6 @@ iface vmbr1 inet manual
 &#x20;       bridge-fd 0
 
 &#x20;       bridge-ageing 0
-
-
 
 
 
@@ -192,9 +184,7 @@ source /etc/network/interfaces.d/\*
 
 &#x20;     Management / VM                    │
 
-&#x20;        VLAN Traffic                    │
-
-&#x20;            │                       SPAN Output
+&#x20;        VLAN Traffic                SPAN Output
 
 &#x20;            │                           │
 
@@ -230,7 +220,7 @@ source /etc/network/interfaces.d/\*
 
 &#x20;     172.16.99.30   172.16.10.15       │
 
-&#x20;                                         
+&#x20;                                        │
 
 &#x20;                                 Passive Packet Capture
 
@@ -310,9 +300,9 @@ ssh root@172.16.99.20
 
 | --------- | ------------------- | ---------- | ------------------------------------- |
 
-| `nic0`    | `fc:9d:05:05:87:6c` | Gi1/0/27   | Management + VLAN-aware VM traffic    |
+| `nic0`    | `fc:9d:05:05:87:6c` | `Gi1/0/27` | Management + VLAN-aware VM traffic    |
 
-| `nic1`    | `6c:6e:07:50:e9:18` | Gi1/0/28   | Dedicated Security Onion SPAN capture |
+| `nic1`    | `6c:6e:07:50:e9:18` | `Gi1/0/28` | Dedicated Security Onion SPAN capture |
 
 
 
@@ -372,7 +362,7 @@ Proxmox nic1
 
 
 
-\## External Security Onion Storage
+\### External Security Onion Storage
 
 
 
@@ -384,9 +374,9 @@ The SSD is:
 
 
 
-\* Formatted as `ext4`.
+\* Formatted as `ext4`
 
-\* Configured through the Proxmox storage interface as a \*\*Directory\*\* storage target.
+\* Configured through the Proxmox storage interface as a \*\*Directory\*\* storage target
 
 \* Mounted and registered as:
 
@@ -408,11 +398,11 @@ This storage is reserved primarily for the Security Onion VM.
 
 
 
-\# 3. Virtual Machine Hardware Bindings
+\## 3. Virtual Machine Hardware Bindings
 
 
 
-\## Victim Systems — antiX Linux VMs
+\### Victim Systems — antiX Linux VMs
 
 
 
@@ -420,7 +410,7 @@ The antiX Linux systems represent hosts located inside the \*\*VICTIMS security 
 
 
 
-\### Storage
+\#### Storage
 
 
 
@@ -436,7 +426,7 @@ The victim systems remain on the primary Proxmox storage pool because they do no
 
 
 
-\### Network Configuration
+\#### Network Configuration
 
 
 
@@ -524,7 +514,7 @@ with the Juniper SRX300 providing the default gateway:
 
 
 
-\### Proxmox Firewall
+\#### Proxmox Firewall
 
 
 
@@ -564,7 +554,7 @@ Guest operating system
 
 
 
-\# Security Onion 3.2.0 Sensor Node
+\## 4. Security Onion 3.2.0 Sensor Node
 
 
 
@@ -586,11 +576,7 @@ This separation is fundamental to the architecture.
 
 
 
-\---
-
-
-
-\## Security Onion Storage
+\### Security Onion Storage
 
 
 
@@ -632,7 +618,7 @@ This provides additional I/O capacity for:
 
 
 
-\## Security Onion Management NIC — `net0`
+\### Security Onion Management NIC — `net0`
 
 
 
@@ -656,7 +642,7 @@ Gateway:    172.16.99.1
 
 
 
-\### Why the VLAN Tag Is Blank
+\#### Why the VLAN Tag Is Blank
 
 
 
@@ -728,7 +714,7 @@ Gateway: 172.16.99.1
 
 
 
-> Do \*\*not\*\* configure `tag=99` on the Security Onion management NIC when Cisco Gi1/0/27 is using VLAN 99 as the native/untagged VLAN.
+> \*\*Important:\*\* Do not configure `tag=99` on the Security Onion management NIC when Cisco Gi1/0/27 is using VLAN 99 as the native/untagged VLAN.
 
 
 
@@ -736,7 +722,7 @@ Gateway: 172.16.99.1
 
 
 
-\## Security Onion Capture NIC — `net1`
+\### Security Onion Capture NIC — `net1`
 
 
 
@@ -858,17 +844,17 @@ This prevents the monitoring interface from becoming an active participant in th
 
 
 
-\# 4. Final VM Network Matrix
+\## 5. Final VM Network Matrix
 
 
 
-| System         | VM NIC | Proxmox Bridge |  VLAN Tag | Guest IP          | Purpose               |
+| System         | VM NIC | Proxmox Bridge | VLAN Tag  | Guest IP          | Purpose               |
 
-| -------------- | ------ | -------------- | --------: | ----------------- | --------------------- |
+| -------------- | ------ | -------------- | --------- | ----------------- | --------------------- |
 
 | Proxmox VE     | Host   | `vmbr0`        | Native 99 | `172.16.99.20/24` | Hypervisor management |
 
-| antiX Linux    | `net0` | `vmbr0`        |      `10` | `172.16.10.15/24` | Victim system         |
+| antiX Linux    | `net0` | `vmbr0`        | `10`      | `172.16.10.15/24` | Victim system         |
 
 | Security Onion | `net0` | `vmbr0`        | \*\*Blank\*\* | `172.16.99.30/24` | Management            |
 
@@ -880,7 +866,7 @@ This prevents the monitoring interface from becoming an active participant in th
 
 
 
-\# 5. Final Physical Port Matrix
+\## 6. Final Physical Port Matrix
 
 
 
@@ -888,13 +874,13 @@ This prevents the monitoring interface from becoming an active participant in th
 
 | ---------- | ---------------------- | ------------------------------ |
 
-| Gi1/0/1    | Juniper SRX300         | 802.1Q trunk                   |
+| `Gi1/0/1`  | Juniper SRX300         | 802.1Q trunk                   |
 
-| Gi1/0/27   | Proxmox `nic0`         | Management + VM VLAN traffic   |
+| `Gi1/0/27` | Proxmox `nic0`         | Management + VM VLAN traffic   |
 
-| Gi1/0/28   | Proxmox `nic1`         | \*\*Dedicated SPAN destination\*\* |
+| `Gi1/0/28` | Proxmox `nic1`         | \*\*Dedicated SPAN destination\*\* |
 
-| Gi1/0/47   | Windows 11 workstation | VLAN 99 management access      |
+| `Gi1/0/47` | Windows 11 workstation | VLAN 99 management access      |
 
 
 
@@ -980,7 +966,7 @@ Suricata + Zeek
 
 
 
-\## 6. Post-Configuration Verification
+\## 7. Post-Configuration Verification
 
 
 
@@ -1044,7 +1030,7 @@ default via 172.16.99.1 dev vmbr0
 
 
 
-Verify `vmbr1` has no Layer 3 address:
+Verify that `vmbr1` has no Layer 3 address:
 
 
 
@@ -1157,4 +1143,6 @@ Security Onion ens19
 
 
 Once all three packet-capture tests show traffic, the Layer 2 monitoring backbone is functioning correctly.
+
+
 
