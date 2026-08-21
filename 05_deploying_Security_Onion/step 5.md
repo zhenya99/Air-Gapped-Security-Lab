@@ -1,320 +1,633 @@
-# Step 5: Complete and Validate Security Onion 3.2.0
----
+# Step 5: Post-Installation Configuration and Sensor Bring-Up
 
-> **Troubleshooting Scenario:** Under normal circumstances, the Security Onion setup wizard automates the entire deployment process. However, because this lab environment is strictly air-gapped, the automated installation crashed. The setup scripts attempted to reach the internet to seed the Docker registry, failing instantly and leaving the system with a fractured SaltStack configuration and missing Elasticsearch dependencies. 
+After Security Onion Setup completes, configure access, confirm platform services, and bring the passive monitoring interface into operational use.
 
-![SaltStack Jinja Compilation Crash](/images/Proxmox/SecOnion/085234.png)
-*Figure 5.0: The fatal SaltStack compilation error (`TemplateNotFound: registry/map.jinja`) caused by the air-gapped installation failure.*
-
-### The Investigation: Tracing the Missing Dependencies
-To understand why the registry failed to build, we must track down where SaltStack is looking for its configuration files and why they are missing.
-
-**1. Checking the Salt Master Configuration**
-By parsing the `/etc/salt/master` file, we can see that Security Onion does not use the default `/srv/salt` directory. Instead, the `file_roots` are dynamically mapped to `/opt/so/saltstack/local/salt`.
-
-![Checking file_roots](/images/Proxmox/SecOnion/40403.png)
-*Figure 5.1: Verifying the custom SaltStack `file_roots` directory mapping.*
-
-**2. Verifying the Missing States**
-Searching the active `file_roots` directory for the core components (`docker`, `firewall`, `registry`) confirms that the installation script crashed before it could copy the `.sls` state files into production.
-
-![Missing SLS Files](/images/Proxmox/SecOnion/0655.png)
-*Figure 5.2: Querying the active Salt directory yields no results for the required state files.*
-
-**3. Finding the Orphaned Files**
-Searching the original installer directory reveals that the required state files do exist locally (`/root/SecurityOnion/salt/`), but were abandoned when the internet check failed.
-
-![Orphaned SLS Files](/images/Proxmox/SecOnion/40712.png)
-*Figure 5.3: Locating the stranded `.sls` configuration files in the root installer directory.*
-
-**The following steps detail the manual recovery and configuration engineering required to bypass this failure, restore the offline Docker registry, and successfully bring the SIEM online.**
-
----
-
-**This final deployment stage transitions the Security Onion VM from a broken base installation into a fully operational security monitoring platform.**
-
-At this point, the operating system and core Security Onion components are installed. The remaining work is to restore the offline container registry, synchronize Elasticsearch authentication, start the dependent services, and verify that the entire platform is operating correctly.
-
----
-
-## 5.1 Recover and Mount the Offline Docker Registry
----
-
-Because this lab operates in an air-gapped environment, the Security Onion VM cannot reach external container registries to download the images it needs. Fortunately, the Security Onion installation ISO contains the required registry data:
+This step transitions the deployment from:
 
 ```text
-/docker/registry.tar
-/docker/registry_image.tar
+Installed and configured
 ```
 
-These files allow the local Docker registry to be restored without Internet access. Create a temporary mount point and attach the ISO in read-only mode:
-
-```bash
-mkdir -p /mnt/securityonion-iso
-mount -o ro /dev/sr0 /mnt/securityonion-iso
-```
-
-The `-o ro` option mounts the ISO as read-only, which prevents accidental changes to the installation media. Verify that the registry files are present:
-
-```bash
-ls -lh /mnt/securityonion-iso/docker/
-```
-
-You should see `registry.tar` and `registry_image.tar` in the output.
-
----
-
-## 5.2 Stage and Verify the Registry Files
----
-
-Create the directory where Security Onion expects the registry data and copy the archives over:
-
-```bash
-mkdir -p /nsm/docker-registry/docker
-
-cp -v /mnt/securityonion-iso/docker/registry.tar \
-  /nsm/docker-registry/docker/
-
-cp -v /mnt/securityonion-iso/docker/registry_image.tar \
-  /nsm/docker-registry/docker/
-```
-
-Verify the files were copied successfully:
-
-```bash
-ls -lh /nsm/docker-registry/docker/
-```
-
-A SHA-256 hash acts like a digital fingerprint for a file. To ensure the archives were not corrupted during the transfer, verify the hashes of both the source and destination files. 
-
-Check `registry.tar`:
-
-```bash
-sha256sum /mnt/securityonion-iso/docker/registry.tar
-sha256sum /nsm/docker-registry/docker/registry.tar
-```
-
-Check `registry_image.tar`:
-
-```bash
-sha256sum /mnt/securityonion-iso/docker/registry_image.tar
-sha256sum /nsm/docker-registry/docker/registry_image.tar
-```
-
-The matching hashes confirm that the files were copied without corruption. Finally, confirm that the archive contains a real Docker Registry data structure:
-
-```bash
-tar -tf /nsm/docker-registry/docker/registry.tar | head -30
-```
-
-> **Important:** The expected output should include paths such as `registry/` and `registry/v2/`. Do not proceed if the archive is missing or the SHA-256 hashes do not match.
-
----
-
-## 5.3 Initialize the Local Image Repository
----
-
-The registry data is now in place, but the Docker image used to run the registry service must also be loaded. Load the embedded registry image:
-
-```bash
-docker load -i /nsm/docker-registry/docker/registry_image.tar
-```
-
-Verify the image (`ghcr.io/security-onion-solutions/registry:3.1.1`) is available:
-
-```bash
-docker images --no-trunc | grep 'security-onion-solutions/registry'
-```
-
-Security Onion uses SaltStack to manage system configuration and services. Apply the registry state to rebuild it:
-
-```bash
-salt-call state.apply registry queue=True
-```
-
-Check the container status and test the local registry API:
-
-```bash
-docker ps -a --filter name=so-dockerregistry
-curl -sk https://127.0.0.1:5000/v2/
-```
-
-> **Lab Note:** A successful response from the curl command should be `{}`, which is an empty JSON object indicating that the registry API is responding successfully.
-
----
-
-## 5.4 Verify the Security Onion Image Catalog
----
-
-Now that the local registry is operational, confirm that it actually contains the Security Onion images required for the deployment. List the repositories:
-
-```bash
-curl -sk https://127.0.0.1:5000/v2/_catalog | jq -r '.repositories[]'
-```
-
-You should see repositories similar to `so-elasticsearch`, `so-kibana`, `so-soc`, `so-suricata`, and `so-zeek`. Check several of the application image versions:
-
-```bash
-for repo in so-soc so-suricata so-zeek; do
-    echo "===== $repo ====="
-    curl -sk \
-      "https://127.0.0.1:5000/v2/security-onion-solutions/$repo/tags/list" \
-      | jq .
-done
-```
-
-> **Why this matters:** The application images should report `3.2.0` and Elasticsearch should report `9.3.7`. This proves that the local registry contains the correct software versions needed to complete the deployment without relying on the Internet.
-
----
-
-## 5.5 Repair Elasticsearch Authentication
----
-
-During the deployment, SOC configuration attempted to reference Elasticsearch authentication information that had not yet been generated. Check the current Elasticsearch authentication data:
-
-```bash
-salt-call pillar.get elasticsearch:auth --out=yaml
-```
-
-If the authentication data is missing, apply the built-in state and verify the authentication file now exists:
-
-```bash
-salt-call state.apply elasticsearch.auth
-ls -l /opt/so/saltstack/local/pillar/elasticsearch/auth.sls
-```
-
-Security Onion also generates the Elasticsearch user and role files with `so-user`. Synchronize them:
-
-```bash
-so-user sync
-```
-
-Verify the generated files and the active Elasticsearch copies:
-
-```bash
-ls -lah \
-  /opt/so/saltstack/local/salt/elasticsearch/files/users \
-  /opt/so/saltstack/local/salt/elasticsearch/files/users_roles \
-  /opt/so/conf/soc/soc_users_roles
-
-ls -lah \
-  /opt/so/conf/elasticsearch/users \
-  /opt/so/conf/elasticsearch/users_roles
-```
-
-> **Important:** Elasticsearch requires these files before the container can be started with the expected Security Onion authentication configuration.
-
----
-
-## 5.6 Start and Validate Elasticsearch
----
-
-With the registry and authentication data in place, Elasticsearch can now be started. Apply the state and verify the container (`so-elasticsearch`) is running:
-
-```bash
-salt-call state.apply elasticsearch -l info
-docker ps -a --filter name=so-elasticsearch
-```
-
-Verify that port `9200` is listening:
-
-```bash
-ss -lntp | grep ':9200'
-```
-
-Retrieve the generated `so_elastic` password and send an authenticated HTTPS request to test it directly:
-
-```bash
-ES_PASS=$(salt-call pillar.get \
-  'elasticsearch:auth:users:so_elastic_user:pass' \
-  --out=txt | awk '{print $2}')
-
-curl -k -u "so_elastic:$ES_PASS" \
-  https://127.0.0.1:9200/
-```
-
-> **Lab Note:** A running Docker container does not automatically mean the application inside it is ready. A successful JSON response confirming the cluster name (`securityonion`) and version (`9.3.7`) proves the database is actively accepting authenticated requests.
-
----
-
-## 5.7 Start the SOC and ElastAlert Services
----
-
-With Elasticsearch operational, the higher-level Security Onion services can now be started. Start SOC and ElastAlert:
-
-```bash
-salt-call state.apply soc -l info
-salt-call state.apply elastalert -l info
-```
-
-Verify the services are in a running state:
-
-```bash
-docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' \
-  | grep -E 'so-soc|so-elastalert'
-```
-
----
-
-## 5.8 Run the Final SaltStack Highstate
----
-
-A highstate tells SaltStack to compare the current system with the configuration Security Onion expects, then apply any required changes. Run the highstate:
-
-```bash
-salt-call state.highstate -l info
-```
-
-> **Important:** This can take several minutes. The exact number of successful states may vary between installations, but the critical requirement is that the output ends with `Failed: 0`. This confirms SaltStack was able to bring the system into the expected configuration securely.
-
----
-
-## 5.9 Perform the Final Security Onion Health Check
----
-
-Run the built-in Security Onion status command to verify all 20+ microservices:
-
-```bash
-so-status
-```
-
-The required services (such as `so-kibana`, `so-suricata`, `so-zeek`, and `so-strelka`) should report as `running`, and services that provide health checks should report a healthy status where applicable. 
-
-The final validation should conclude with:
+to:
 
 ```text
-✔ This onion is ready to make your adversaries cry!
+Operational network sensor
 ```
 
 ---
 
-## 5.10 Final Result & Architecture Overview
+## 5.1 Log In to Security Onion
+
+Log in at the Linux console if necessary using the operating-system account created during Step 3.
+
+Security Onion administrative commands requiring elevated permissions should be run with:
+
+```bash
+sudo
+```
+
 ---
 
-The Security Onion 3.2.0 standalone deployment is now operational. The completed platform includes the restored embedded Docker registry, active Elasticsearch authentication, and a clean SaltStack highstate with zero failures.
+# 5.2 Check Security Onion Service Status
 
-The overall flow of the validated platform operates as follows:
+Run:
+
+```bash
+sudo so-status
+```
+
+Security Onion uses `so-status` to report the state of enabled platform services.
+
+Immediately after installation, some services may still be starting.
+
+A newly installed node can temporarily display a fault condition while initialization completes.
+
+For a machine-readable health result:
+
+```bash
+sudo so-status -q
+echo $?
+```
+
+A healthy system should eventually return:
 
 ```text
-       Network Traffic
-              │
-              ▼
-       Suricata + Zeek
-              │
-              ▼
-     Processing / Logging
-              │
-              ▼
-        Elasticsearch
-              │
-           ┌──┴──┐
-           ▼     ▼
-         Kibana SOC
-           │     │
-           └──┬───┘
-              ▼
-     Security Monitoring
-  Detection & Investigation
+0
 ```
 
-In practical terms, Suricata and Zeek observe and analyze network traffic, the processing components prepare the data, Elasticsearch stores and indexes the information, and Kibana/SOC provide the interface used by the analyst to view, investigate, and manage security events.
+The documented meanings include:
+
+```text
+0   System appears healthy
+1   One or more subsystems are not running
+2   System is still starting
+99  Installation is in progress
+100 Installation encountered errors
+```
+
+---
+
+# 5.3 Access Security Onion Console
+
+From the authorized management workstation, open a Chromium-based browser and navigate to:
+
+```text
+https://172.16.99.30
+```
+
+Sign in using the **SOC account** created during Setup.
+
+Security Onion recommends Chromium-based browsers for SOC access.
+
+---
+
+# 5.4 If SOC Access Is Blocked
+
+If the web interface cannot be reached because the workstation was not permitted through the Security Onion host firewall, add the analyst workstation.
+
+From Security Onion:
+
+```bash
+sudo so-firewall includehost analyst <WORKSTATION-IP>
+```
+
+Example format:
+
+```bash
+sudo so-firewall includehost analyst 172.16.99.X
+```
+
+Use the actual administrative workstation address.
+
+After SOC becomes available, firewall configuration should normally be managed through:
+
+```text
+SOC
+  │
+  ▼
+Administration
+  │
+  ▼
+Configuration
+  │
+  ▼
+firewall
+  │
+  ▼
+hostgroups
+```
+
+Do not manually modify `iptables` rules because Security Onion manages its host firewall configuration.
+
+---
+
+# 5.5 Open the Grid Page
+
+In SOC, navigate to:
+
+```text
+Administration
+     │
+     ▼
+Grid
+```
+
+or the corresponding **Grid** page in the current SOC navigation.
+
+Expand the Standalone node.
+
+Allow the platform enough time to finish initializing.
+
+The desired state is:
+
+```text
+Connection Status:      OK
+Process Status:         OK
+Elasticsearch Status:   OK
+```
+
+along with healthy container/service status.
+
+A new node may initially show:
+
+```text
+Fault
+```
+
+before eventually transitioning to:
+
+```text
+OK
+```
+
+as its services initialize.
+
+---
+
+# 5.6 Confirm the Interface Configuration
+
+On the Security Onion host:
+
+```bash
+ip -br addr
+```
+
+The intended logical configuration is:
+
+```text
+ens18    UP    172.16.99.30/24
+ens19    UP
+```
+
+The monitoring interface should not contain an IPv4 address.
+
+The final design is:
+
+```text
+ens18
+  │
+  ├── 172.16.99.30/24
+  ├── Management
+  └── Default gateway
+
+
+ens19
+  │
+  ├── No IP
+  ├── No gateway
+  └── Passive monitoring
+```
+
+Security Onion recommends a single IP-bearing management interface and dedicated IP-less sniffing interfaces for TAP/SPAN monitoring.
+
+---
+
+# 5.7 Confirm the Management Route
+
+Display the routing table:
+
+```bash
+ip route
+```
+
+The default route should use the management network:
+
+```text
+default via 172.16.99.1
+```
+
+There should be no routing requirement associated with `ens19`.
+
+The sensor interface observes traffic rather than routing it.
+
+---
+
+# 5.8 Confirm Mirrored Traffic Reaches Security Onion
+
+Capture packets directly from the monitoring interface:
+
+```bash
+sudo tcpdump -eni ens19 -c 20
+```
+
+The SPAN feed should contain mirrored network traffic from VLAN 10.
+
+Example traffic may include:
+
+```text
+ARP, Request who-has 172.16.10.15 tell 172.16.10.1
+```
+
+The complete monitoring path is:
+
+```text
+VLAN 10
+   │
+   ▼
+Cisco Catalyst 2960-X
+   │
+   ▼
+SPAN Session
+   │
+   ▼
+Gi1/0/28
+   │
+   ▼
+Proxmox nic1
+   │
+   ▼
+vmbr1
+   │
+   ▼
+VM net1
+   │
+   ▼
+ens19
+   │
+   ├── Suricata
+   └── Zeek
+```
+
+Do not configure VLAN 10 addressing on Security Onion merely because VLAN 10 packets appear on the capture interface.
+
+They are mirrored packets.
+
+---
+
+# 5.9 Understand the Security Onion Monitoring Interface
+
+Security Onion may place configured sniffing interfaces into its monitoring architecture, including `bond0`.
+
+If another sniffing interface needs to be added **after Setup**, Security Onion provides:
+
+```bash
+sudo so-monitor-add
+```
+
+which adds monitor interfaces to the Security Onion monitoring configuration.
+
+Do not run `so-monitor-add` unnecessarily if Setup already configured the intended monitoring interface.
+
+---
+
+# 5.10 Confirm Suricata Is Running
+
+Check the Suricata container:
+
+```bash
+sudo docker ps --format 'table {{.Names}}\t{{.Status}}' | grep suricata
+```
+
+Then inspect recent logs:
+
+```bash
+sudo docker logs so-suricata --tail 50
+```
+
+The Suricata engine should start without persistent capture-interface errors.
+
+---
+
+# 5.11 Confirm Suricata Is Actually Processing Packets
+
+A running container alone does not prove that packets are being decoded.
+
+Inspect the Suricata statistics:
+
+```bash
+sudo docker exec so-suricata sh -c \
+'grep -E "capture.afpacket.poll_data|capture.kernel_packets|decoder.pkts|decoder.bytes|detect.alert" \
+/var/log/suricata/stats.log | tail -20'
+```
+
+Generate normal traffic on the monitored VLAN and run the command again.
+
+The important counters should increase over time:
+
+```text
+capture.afpacket.poll_data   > 0
+decoder.pkts                 > 0
+decoder.bytes                > 0
+```
+
+The first success condition is:
+
+```text
+SPAN packets reach ens19
+           +
+Suricata decoder.pkts increases
+```
+
+An alert counter of zero does **not** automatically indicate a capture failure. It may simply mean that no current traffic matched an enabled detection rule.
+
+---
+
+# 5.12 Do Not Tune Suricata Before Establishing the Baseline
+
+Do not immediately modify Suricata:
+
+```text
+AF_PACKET threads
+rulesets
+BPF filters
+capture buffers
+cluster settings
+```
+
+on a clean installation.
+
+First determine whether the default Security Onion configuration successfully captures and decodes packets.
+
+Only tune Suricata if the clean-install baseline demonstrates a specific problem.
+
+Configuration changes should be made through Security Onion's supported configuration interface where available rather than by directly modifying generated files under:
+
+```text
+/opt/so/conf/
+```
+
+---
+
+# 5.13 Confirm Zeek Operation
+
+Check the Zeek container:
+
+```bash
+sudo docker ps --format 'table {{.Names}}\t{{.Status}}' | grep zeek
+```
+
+Inspect recent Zeek messages if troubleshooting is required:
+
+```bash
+sudo docker logs so-zeek --tail 50
+```
+
+Traffic observed on the monitoring interface should ultimately result in network metadata that can be searched through SOC.
+
+---
+
+# 5.14 Confirm Data Appears in SOC
+
+From Security Onion Console, use:
+
+```text
+Hunt
+Dashboards
+Alerts
+```
+
+to inspect newly generated events.
+
+Normal traffic should generate network metadata even if it does not produce an IDS alert.
+
+The operational pipeline is:
+
+```text
+SPAN Traffic
+     │
+     ▼
+Monitoring Interface
+     │
+     ├──────────────┐
+     ▼              ▼
+ Suricata          Zeek
+     │              │
+     └──────┬───────┘
+            ▼
+       Event Pipeline
+            │
+            ▼
+      Elasticsearch
+            │
+            ▼
+            SOC
+```
+
+---
+
+# 5.15 Do Not Use Internet-Dependent Detection Tests
+
+Because this system is configured in Airgap mode, avoid validation procedures that require reaching public Internet hosts.
+
+For example, do not make the air-gapped deployment dependent on:
+
+```bash
+curl http://testmynids.org/uid/index.html
+```
+
+or other public test services.
+
+Security Onion's `so-test` utility can also require Internet access to download replay resources, so it should not be assumed to work as an offline validation method.
+
+For this lab, use:
+
+* Existing VLAN 10 traffic
+* Locally generated traffic
+* Locally stored PCAPs
+* Local Suricata test rules where necessary
+
+to validate sensor operation.
+
+---
+
+# 5.16 Configure the Airgap NIDS Rules Profile
+
+Security Onion uses an Airgap-specific NIDS configuration profile when the system is operating in Airgap mode.
+
+Rule configuration should be managed through:
+
+```text
+SOC
+  │
+  ▼
+Administration
+  │
+  ▼
+Configuration
+  │
+  ▼
+NIDS / Ruleset configuration
+```
+
+Do not manually download rules from the Internet from the Security Onion sensor.
+
+When adding additional offline rulesets later, make sure each ruleset has a unique name to avoid rule synchronization problems.
+
+---
+
+# 5.17 Configure Time Synchronization
+
+Accurate timestamps are critical for:
+
+```text
+Suricata alerts
+Zeek metadata
+Elasticsearch events
+PCAP correlation
+Incident timelines
+```
+
+For a completely air-gapped environment, configure Security Onion to use an internal NTP source available within the lab rather than a public Internet NTP service.
+
+Security Onion exposes NTP-related configuration through the Administration configuration interface.
+
+---
+
+# 5.18 Review Data Retention
+
+In a Standalone deployment, network telemetry, packet capture, and Elasticsearch data share finite local storage.
+
+Review retention settings after installation.
+
+Pay particular attention to:
+
+```text
+Elasticsearch data retention
+Full packet capture retention
+Suricata-related storage
+Available free disk space
+```
+
+Security Onion specifically recommends reviewing data lifecycle and packet-capture retention so Elasticsearch does not reach storage watermarks and stop ingesting data.
+
+---
+
+# 5.19 Final Operational State
+
+At the completion of Step 5, the deployment should have the following architecture:
+
+```text
+                    AIR-GAPPED SECURITY LAB
+
+                           VLAN 10
+                              │
+                              ▼
+                    Cisco Catalyst 2960-X
+                              │
+                       SPAN Destination
+                          Gi1/0/28
+                              │
+                              ▼
+                         Proxmox nic1
+                              │
+                              ▼
+                            vmbr1
+                              │
+                              ▼
+                         VM 900 net1
+                              │
+                              ▼
+                            ens19
+                         NO IP ADDRESS
+                              │
+                   ┌──────────┴──────────┐
+                   │                     │
+                   ▼                     ▼
+               Suricata                 Zeek
+                   │                     │
+                   └──────────┬──────────┘
+                              │
+                              ▼
+                       Security Onion
+                         Event Pipeline
+                              │
+                              ▼
+                        Elasticsearch
+                              │
+                              ▼
+                             SOC
+
+
+                    MANAGEMENT PLANE
+
+                     Cisco Gi1/0/27
+                              │
+                              ▼
+                         Proxmox nic0
+                              │
+                              ▼
+                            vmbr0
+                              │
+                              ▼
+                         VM 900 net0
+                              │
+                              ▼
+                            ens18
+                      172.16.99.30/24
+                              │
+                              ▼
+                      Gateway 172.16.99.1
+```
+
+---
+
+# Step 5 Completion Criteria
+
+The Security Onion deployment is operational when:
+
+* [ ] Security Onion Setup completed successfully.
+* [ ] Deployment type is `STANDALONE`.
+* [ ] Connectivity mode is `AIRGAP`.
+* [ ] `ens18` provides management connectivity.
+* [ ] `ens18` uses `172.16.99.30/24`.
+* [ ] Default gateway is `172.16.99.1`.
+* [ ] `ens19` is the passive monitoring interface.
+* [ ] `ens19` has no IP address.
+* [ ] Security Onion Console is accessible from the authorized management workstation.
+* [ ] `sudo so-status` reports healthy services after initialization.
+* [ ] Grid status transitions to healthy.
+* [ ] Mirrored VLAN 10 traffic is visible on the monitoring interface.
+* [ ] Suricata is processing packets.
+* [ ] Zeek is running and generating network metadata.
+* [ ] SOC receives network telemetry.
+* [ ] Airgap rules/configuration is active.
+* [ ] No Security Onion service depends on public Internet connectivity for normal operation.
+
+---
+
+# Deployment Phase Summary
+
+```text
+STEP 1
+Environment Staging
+        │
+        ▼
+STEP 2
+Proxmox VM Provisioning
+        │
+        ▼
+STEP 3
+Security Onion OS Installation
+        │
+        ▼
+STEP 4
+Standalone + Airgap Configuration
+        │
+        ▼
+STEP 5
+Post-Installation Configuration
+and Sensor Bring-Up
+        │
+        ▼
+OPERATIONAL SECURITY ONION SENSOR
+```
