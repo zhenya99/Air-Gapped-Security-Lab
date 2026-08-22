@@ -6,7 +6,7 @@ This section provides visual proof that the Security Onion detection pipeline is
 
 ## 1. Custom Suricata Rule
 
-![Custom Suricata Rule](images/Rules/01_suricata_custom_rule_sid_1000001.png)
+![Custom Suricata Rule](/images/Rules/01_suricata_custom_rule_sid_1000001.png)
 
 **Description:**  
 Custom Suricata rule **SID 1000001** detects ICMP traffic from Kali `192.168.66.50` to Proxmox `172.16.99.20`.
