@@ -1,0 +1,28 @@
+source="large_dns_sample.log" host="tryhackme" index="data_exfil" sourcetype="large_dns_sample"
+| eventstats count as total_count by src_ip
+| eval long_query=if(len(query) > 30, query, null())
+
+| eventstats dc(src_ip) as total_network_ips
+| eventstats dc(src_ip) as ips_using_query by long_query
+| eval network_pct = (ips_using_query / total_network_ips) * 100
+| eval rare_long_query = if(network_pct < 5 AND isnotnull(long_query), long_query, null())
+
+| stats count as query_freq by src_ip, total_count, rare_long_query
+| sort src_ip, - query_freq
+| streamstats count(rare_long_query) as domain_rank by src_ip
+| where domain_rank <= 5 OR isnull(rare_long_query)
+| stats first(total_count) as count, list(rare_long_query) as long_queries by src_ip
+
+| eventstats avg(count) as mean, stdev(count) as stdev
+| eval z_score=if(stdev > 0, (count - mean) / stdev, 0)
+| eval Category=case(
+    z_score > 2, "Very High (Outlier - Top 2.5%)",
+    z_score > 1 AND z_score <= 2, "High (Top 16%)",
+    z_score >= -1 AND z_score <= 1, "Average (Middle 68%)",
+    z_score >= -2 AND z_score < -1, "Low (Bottom 16%)",
+    z_score < -2, "Very Low (Outlier - Bottom 2.5%)",
+    1=1, "Unknown"
+)
+| fields - mean, stdev
+| sort - count
+| table Category, z_score, src_ip, count, long_queries

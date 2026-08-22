@@ -1,0 +1,16 @@
+source="100k_dns_v2_test.log" host="tryhackme" index="data_exfil" sourcetype="100k" NOT query="*amazonaws.com" NOT query="*cloudfront.net" NOT query="*akamai.net" NOT query="*office.com" NOT query="*microsoft.com" NOT query="*apple.com"
+| eval long_query=if(len(query) > 30, query, null())
+| stats count as total_requests, dc(query) as unique_domains, values(long_query) as long_query_list by src_ip
+| eval uniqueness_ratio = round((unique_domains / total_requests) * 100, 2)
+| eventstats p95(total_requests) as p95_vol, p95(uniqueness_ratio) as p95_ratio
+| eval Category=case(
+    total_requests > p95_vol AND uniqueness_ratio > p95_ratio, "Critical (High Vol & High Uniqueness)",
+    uniqueness_ratio > p95_ratio AND total_requests >= 50, "Suspicious (Low & Slow DGA/Exfil)",
+    total_requests > p95_vol, "High Volume (Possible P2P/Server)",
+    1=1, "Normal"
+)
+| where Category != "Normal" AND (Category="Critical (High Vol & High Uniqueness)" OR Category="Suspicious (Low & Slow DGA/Exfil)")
+| eval query_sample = mvindex(long_query_list, 0, 4)
+| fields - p95_vol, p95_ratio, long_query_list
+| sort - uniqueness_ratio, - total_requests
+| table Category, src_ip, total_requests, unique_domains, uniqueness_ratio, query_sample30
