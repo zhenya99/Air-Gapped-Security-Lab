@@ -1,46 +1,71 @@
 conf t
 
-! Set hostname and domain
+! ============================================================
+! LAB-SW-01 — FINAL LAB CONFIGURATION
+! Cisco Catalyst 2960-X
+! ============================================================
+
 hostname LAB-SW-01
 ip domain-name lab.home
 
-! User and password hardening
-enable secret 0 cisco
-username soc_admin privilege 15 secret 0 cisco
+! ------------------------------------------------------------
+! LOCAL ADMINISTRATION
+! Replace placeholders before applying to a real device.
+! ------------------------------------------------------------
+enable secret <REPLACE_WITH_STRONG_ENABLE_SECRET>
+username soc_admin privilege 15 secret <REPLACE_WITH_STRONG_ADMIN_SECRET>
 
-! Secure remote access (Force SSH, disable Telnet)
 crypto key generate rsa modulus 2048
 ip ssh version 2
+
 line vty 0 4
  transport input ssh
  login local
+exit
+
 line console 0
  logging synchronous
  login local
+exit
 
-! Disable insecure and unnecessary services
+! Disable unnecessary management services
 no ip http server
 no ip http secure-server
 no cdp run
 vtp mode transparent
 
-! Initialize VLANs
+! ============================================================
+! VLANS
+! VLAN 66 is NOT required on this switch in the final topology.
+! Kali/Netgear terminates directly on Juniper ge-0/0/5.0.
+! ============================================================
 vlan 10
  name VICTIM_NETWORK
+exit
+
 vlan 99
  name MANAGEMENT_NETWORK
+exit
+
 vlan 999
  name BLACKHOLE
 exit
 
-! Configure Switch Management Interface & Routing
+! ============================================================
+! SWITCH MANAGEMENT
+! ============================================================
 interface Vlan99
  ip address 172.16.99.2 255.255.255.0
  no shutdown
 exit
+
 ip default-gateway 172.16.99.1
 
-! Disable all unused ports
+! ============================================================
+! UNUSED PORTS
+! Gi1/0/2 is intentionally unused in the final topology.
+! The Netgear attacker switch connects directly to the Juniper.
+! ============================================================
 interface range GigabitEthernet1/0/2 - 26 , GigabitEthernet1/0/29 - 46 , GigabitEthernet1/0/48
  description UNUSED_BLACKHOLE
  switchport mode access
@@ -48,34 +73,51 @@ interface range GigabitEthernet1/0/2 - 26 , GigabitEthernet1/0/29 - 46 , Gigabit
  shutdown
 exit
 
-! Port 1: Uplink to Juniper Router
+! ============================================================
+! Gi1/0/1 — JUNIPER SRX TRUNK
+! Tagged VLANs: 10,99
+! Native/parking VLAN: 999
+! ============================================================
 interface GigabitEthernet1/0/1
  description UPLINK_TO_JUNIPER
  switchport mode trunk
  switchport nonegotiate
  switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,99,999
  no shutdown
 exit
 
-! Port 27: Proxmox Management & Live Traffic (vmbr0)
+! ============================================================
+! Gi1/0/27 — PROXMOX MAIN UPLINK
+! Proxmox nic0 -> vmbr0
+! Native/Untagged VLAN: 99
+! Tagged VM VLAN: 10
+! This interface is also the SPAN SOURCE.
+! ============================================================
 interface GigabitEthernet1/0/27
  description PROXMOX_MAIN_UPLINK
  switchport mode trunk
  switchport nonegotiate
- spanning-tree portfast trunk
  switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,99
+ spanning-tree portfast trunk
  no shutdown
 exit
 
-! Port 28: Proxmox SPAN Destination for SecOnion (vmbr1)
+! ============================================================
+! Gi1/0/28 — SECURITY ONION SPAN DESTINATION
+! Proxmox nic1 -> vmbr1 -> VM 900 net1 -> ens19 -> bond0
+! No normal production traffic should originate here.
+! ============================================================
 interface GigabitEthernet1/0/28
  description SECONION_CAPTURE_NIC
- switchport nonegotiate
  no switchport port-security
  no shutdown
 exit
 
-! Port 47: Analyst Station Management
+! ============================================================
+! Gi1/0/47 — WINDOWS 11 ANALYST / MANAGEMENT
+! ============================================================
 interface GigabitEthernet1/0/47
  description ANALYST_STATION_MGMT
  switchport mode access
@@ -90,10 +132,20 @@ interface GigabitEthernet1/0/47
  no shutdown
 exit
 
-! Corrected SPAN Session: Mirror Victim traffic (VLAN 10) to Port 28
+! ============================================================
+! SPAN SESSION 1 — FINAL VERIFIED CONFIGURATION
+!
+! Source:      Gi1/0/27
+! Direction:   BOTH (RX + TX)
+! Destination: Gi1/0/28
+! Encapsulation: Replicate
+!
+! This mirrors traffic crossing the Proxmox uplink, including
+! the Kali -> Proxmox ICMP validation flow.
+! ============================================================
 no monitor session 1
-monitor session 1 source vlan 10 both
-monitor session 1 destination interface GigabitEthernet1/0/28
+monitor session 1 source interface GigabitEthernet1/0/27 both
+monitor session 1 destination interface GigabitEthernet1/0/28 encapsulation replicate
 
-! Save configuration
-do write memory
+end
+write memory
