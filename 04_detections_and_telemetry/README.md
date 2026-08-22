@@ -6,7 +6,7 @@ This section provides visual proof that the Security Onion detection pipeline is
 
 ## 1. Custom Suricata Rule
 
-![Custom Suricata Rule](images/01_suricata_custom_rule_sid_1000001.png)
+![Custom Suricata Rule](Air-Gapped-Security-Lab\images\Rules/01_suricata_custom_rule_sid_1000001.png)
 
 **Description:**  
 Custom Suricata rule **SID 1000001** detects ICMP traffic from Kali `192.168.66.50` to Proxmox `172.16.99.20`.
@@ -19,7 +19,7 @@ LAB TEST - Kali ICMP to Proxmox
 
 ## 2. Working Security Onion Alerts
 
-![Working Security Onion Alerts](images/02_security_onion_working_alerts.png)
+![Working Security Onion Alerts](Air-Gapped-Security-Lab\images\Rules/02_security_onion_working_alerts.png)
 
 **Description:**  
 Security Onion SOC confirms that the custom rule is generating alerts.
