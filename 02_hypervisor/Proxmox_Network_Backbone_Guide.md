@@ -1,4 +1,4 @@
-# Proxmox Network Backbone & Security Onion VM Bindings: A Complete Guide [cite: 4]
+# Proxmox Network Backbone & Security Onion VM Bindings: A Complete Guide
 
 Building a reliable Layer 2 transport architecture in Proxmox is the foundation of any good virtualized SOC lab [cite: 4]. This guide walks through my finalized network backbone, separating management traffic from passive packet capture to ensure Suricata and Zeek get perfectly clean mirrored data [cite: 4]. 
 
