@@ -1326,36 +1326,9 @@ Eight files with non-zero sizes were confirmed.
 
 ---
 
-## 27. Final Verified State
 
-The following items are complete:
 
-* [x] Ubuntu Server 24.04.4 LTS installed.
-* [x] Static address `192.168.66.53/24` configured.
-* [x] Default gateway `192.168.66.1` configured.
-* [x] VLAN 66 physical path restored.
-* [x] SSH active, enabled, and remotely accessible.
-* [x] BIND9 packages installed.
-* [x] Exact package versions recorded.
-* [x] Original BIND configuration backed up locally.
-* [x] Private `exfil.test` zone configured.
-* [x] Normal DNS record working.
-* [x] Wildcard DNS record working.
-* [x] Remote DNS resolution working from `172.16.99.10`.
-* [x] Query logging enabled.
-* [x] Public recursion refused.
-* [x] Zone transfers blocked.
-* [x] BIND restricted to the intended IPv4 addresses.
-* [x] UFW enabled with inbound and outbound default-deny policies.
-* [x] SSH and DNS tested after enabling UFW.
-* [x] Unapproved outbound test blocked.
-* [x] Approved internal gateway test successful.
-* [x] Configuration and evidence copied into the Git project.
-* [x] Secret BIND control key excluded from Git.
-
----
-
-## 28. Beginner Troubleshooting Notes
+## 28. Troubleshooting Notes
 
 ### BIND Configuration Check Produces No Output
 
