@@ -1,4 +1,4 @@
-# 04 â€” Windows 11 Victim
+# 04. Windows 11 Victim
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# 09 â€” Safe DNS Exfiltration Simulation
+# 09. Safe DNS Exfiltration Simulation
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# 01 â€” Lab Architecture
+# 01. Lab Architecture
 
 ## What Is Architecture?
 

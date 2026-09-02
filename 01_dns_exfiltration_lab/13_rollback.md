@@ -1,4 +1,4 @@
-# 13 â€” Rollback
+# 13. Rollback
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# 08 â€” Normal DNS Baseline
+# 08\. Normal DNS Baseline
 
 ## Purpose
 
@@ -10,12 +10,13 @@ Record each normal DNS test, the time it was run, and the expected result.
 
 ## What to Measure
 
-- Number of DNS requests.
-- Length of each requested name.
-- Number of subdomains.
-- DNS response type.
-- Source and destination IP addresses.
+* Number of DNS requests.
+* Length of each requested name.
+* Number of subdomains.
+* DNS response type.
+* Source and destination IP addresses.
 
 ## Results
 
 Add a short summary of the normal behavior here.
+

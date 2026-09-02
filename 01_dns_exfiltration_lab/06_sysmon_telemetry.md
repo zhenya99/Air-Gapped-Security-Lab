@@ -1,4 +1,4 @@
-# 06 â€” Sysmon Telemetry
+# 06\. Sysmon Telemetry
 
 ## Purpose
 
@@ -10,10 +10,11 @@ Record the Sysmon download, offline transfer, installation, and configuration st
 
 ## Events to Collect
 
-- Process creation events.
-- Network connection events.
-- DNS query events.
+* Process creation events.
+* Network connection events.
+* DNS query events.
 
 ## Validation
 
 Record how the Sysmon events were confirmed in Windows Event Viewer and Splunk.
+

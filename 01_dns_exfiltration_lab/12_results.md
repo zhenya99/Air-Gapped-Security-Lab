@@ -1,4 +1,4 @@
-# 12 â€” Lab Results
+# 12\. Lab Results
 
 ## Purpose
 
@@ -20,3 +20,4 @@ List the important screenshots, logs, packet captures, and timestamps here.
 ## Final Summary
 
 Write a short beginner-friendly explanation of the final result here.
+

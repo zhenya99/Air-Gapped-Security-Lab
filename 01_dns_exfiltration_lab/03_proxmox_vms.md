@@ -1,4 +1,4 @@
-# 03 â€” Proxmox Virtual Machines
+# 03. Proxmox Virtual Machines
 
 ## What Is This File For?
 

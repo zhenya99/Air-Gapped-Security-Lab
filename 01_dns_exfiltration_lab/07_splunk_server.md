@@ -1,4 +1,4 @@
-# 07 â€” Splunk Server
+# 07. Splunk Server
 
 ## Purpose
 
