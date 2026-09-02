@@ -1,0 +1,32 @@
+# OPTIONAL FUTURE STAGE. Do not apply before the collector is deployed.
+# Assumes proposed Linux Splunk/syslog host 172.16.99.40 on VLAN 99.
+# Requires the core DNS overlay and its deny policies.
+# UDP 514: syslog daemon with durable files.
+# TCP 9997: configured Splunk receiver for endpoint universal forwarders.
+# No 8000/8089/8088 access is granted to victims.
+
+set security zones security-zone MGMT address-book address SPLUNK-HOST 172.16.99.40/32
+set applications application LAB-SPLUNK-FORWARD protocol tcp
+set applications application LAB-SPLUNK-FORWARD destination-port 9997
+
+set security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK match source-address DNS-WIN11-HOST
+set security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK match destination-address SPLUNK-HOST
+set security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK match application LAB-SPLUNK-FORWARD
+set security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK then permit
+set security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK then log session-close
+insert security policies from-zone VICTIMS to-zone MGMT policy WIN-TO-SPLUNK before policy LAB-DENY-V-M
+
+set security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK match source-address DNS-SERVER
+set security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK match destination-address SPLUNK-HOST
+set security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK match application LAB-SPLUNK-FORWARD
+set security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK then permit
+set security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK then log session-close
+insert security policies from-zone DNS-LAB to-zone MGMT policy DNS-TO-SPLUNK before policy LAB-DENY-D-M
+
+# Match both RT_FLOW and system events with a severity suitable for the lab.
+# Preserve the core overlay's event mode; syslog host uses UDP port 514.
+set system syslog host 172.16.99.40 any any
+set system syslog host 172.16.99.40 source-address 172.16.99.1
+set system syslog host 172.16.99.40 structured-data
+
+# Review, commit check, commit confirmed 10; confirm after log receipt tests.

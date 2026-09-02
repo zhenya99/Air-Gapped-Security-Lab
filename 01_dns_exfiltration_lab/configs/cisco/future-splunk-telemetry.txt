@@ -1,0 +1,12 @@
+! OPTIONAL FUTURE STAGE. Do not apply until the collector is deployed.
+! Proposed collector 172.16.99.40 must be unused, assigned and reachable.
+! Requires a syslog daemon listening on UDP 514 with durable file storage.
+! Splunk must separately monitor those files.
+! Follow configs/telemetry/README.md; this does not install Splunk.
+configure terminal
+logging host 172.16.99.40 transport udp port 514
+logging trap informational
+logging source-interface Vlan99
+end
+!
+! No save command is included. Validate receipt, then save separately.

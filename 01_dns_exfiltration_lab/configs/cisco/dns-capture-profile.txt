@@ -1,0 +1,18 @@
+! OPTIONAL: victim-side DNS measurement profile.
+! Use only after Windows VM 910 is operating in VLAN 10.
+! This temporarily removes VLAN 20 and 99 from sensor visibility.
+! The existing Kali-to-Proxmox ICMP alert will not be visible in this mode.
+! Filter both directions to VLAN 10; do not use RX-only mirroring.
+configure terminal
+monitor session 1 filter vlan 10
+end
+!
+! Validate with: show monitor session 1
+! Do not save an experimental profile unless intentionally making it permanent.
+!
+! RESTORE general capture afterwards (run this block separately):
+! configure terminal
+! no monitor session 1
+! monitor session 1 source interface GigabitEthernet1/0/27 both
+! monitor session 1 destination interface GigabitEthernet1/0/28 encapsulation replicate
+! end
