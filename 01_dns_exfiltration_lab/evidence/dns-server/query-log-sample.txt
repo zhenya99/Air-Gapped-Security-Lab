@@ -1,0 +1,5 @@
+02-Sep-2026 17:50:22.089 queries: info: client @0x71db38066d08 192.168.66.53#37306 (logging-test.exfil.test): query: logging-test.exfil.test IN A +E(0)K (192.168.66.53)
+02-Sep-2026 17:51:42.549 queries: info: client @0x71db300079d8 172.16.99.10#59460 (normal.exfil.test): query: normal.exfil.test IN A + (192.168.66.53)
+02-Sep-2026 17:53:59.319 queries: info: client @0x71db300079d8 192.168.66.53#34629 (example.com): query: example.com IN A +E(0)K (192.168.66.53)
+02-Sep-2026 17:55:06.118 queries: info: client @0x71db3000e878 192.168.66.53#36597 (exfil.test): query: exfil.test IN AXFR -E(0)TK (192.168.66.53)
+02-Sep-2026 18:07:19.336 queries: info: client @0x71db300079d8 172.16.99.10#59460 (firewall-test.exfil.test): query: firewall-test.exfil.test IN A + (192.168.66.53)

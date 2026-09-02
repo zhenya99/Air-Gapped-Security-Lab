@@ -1,0 +1,12 @@
+$TTL 300
+@       IN      SOA     dns-srv-01.exfil.test. admin.exfil.test. (
+                        2026090201 ; Serial
+                        300        ; Refresh
+                        120        ; Retry
+                        604800     ; Expire
+                        300 )      ; Negative cache TTL
+
+@           IN      NS      dns-srv-01.exfil.test.
+dns-srv-01  IN      A       192.168.66.53
+normal      IN      A       192.168.66.53
+*           IN      A       192.168.66.53
