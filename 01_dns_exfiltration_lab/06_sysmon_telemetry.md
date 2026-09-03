@@ -1,748 +1,323 @@
-\# 06. Sysmon Telemetry
+# 04. Windows 11 Victim
 
+## Purpose
 
+The Windows 11 system acts as the victim workstation in the DNS exfiltration lab.
 
-\## Purpose
+It generates normal and controlled DNS activity that can be observed by the lab's DNS, logging, and monitoring systems.
 
+---
 
+## Network Configuration
 
-Sysmon records detailed Windows endpoint activity.
+| Setting | Value |
+|---|---|
+| Operating system | Windows 11 Home |
+| IPv4 address | `172.16.10.50` |
+| Subnet | `172.16.10.0/24` |
+| Subnet mask | `255.255.255.0` |
+| Default gateway | `172.16.10.1` |
+| DNS server | `192.168.66.53` |
+| VLAN | `10` |
+| DNS test zone | `exfil.test` |
 
-
-
-In this lab, Sysmon helps associate DNS and network activity with the Windows processes that generated it.
-
-
-
-The three primary event types collected are:
-
-
-
-| Event ID | Event |
-
-|---:|---|
-
-| `1` | Process Creation |
-
-| `3` | Network Connection |
-
-| `22` | DNS Query |
-
-
-
-\---
-
-
-
-\## Telemetry Flow
-
-
+Traffic follows this path:
 
 ```text
-
 Windows 11 Victim
-
 172.16.10.50
-
-&#x20;     |
-
-&#x20;     v
-
-Sysmon
-
-&#x20;     |
-
-&#x20;     v
-
-Microsoft-Windows-Sysmon/Operational
-
-&#x20;     |
-
-&#x20;     +-- Event ID 1  - Process Creation
-
-&#x20;     +-- Event ID 3  - Network Connection
-
-&#x20;     +-- Event ID 22 - DNS Query
-
-&#x20;     |
-
-&#x20;     v
-
-Future: Splunk Universal Forwarder
-
+VLAN 10
+      |
+      v
+Juniper SRX
+172.16.10.1
+      |
+      | Inter-VLAN Routing
+      v
+VLAN 66
+      |
+      v
+BIND9 DNS Server
+192.168.66.53
 ```
 
+---
 
+## Verify Windows Networking
 
-Splunk forwarding is intentionally handled in the next phase.
-
-
-
-\---
-
-
-
-\## 1. Verify Sysmon Was Not Already Installed
-
-
-
-Before installation, the victim was checked with:
-
-
+Open PowerShell and run:
 
 ```powershell
-
-Get-Service Sysmon\* -ErrorAction SilentlyContinue
-
+ipconfig /all
 ```
 
-
-
-```powershell
-
-Get-Process Sysmon\* -ErrorAction SilentlyContinue
-
-```
-
-
-
-```powershell
-
-Get-WinEvent -ListLog "Microsoft-Windows-Sysmon/Operational" -ErrorAction SilentlyContinue
-
-```
-
-
-
-All checks returned empty.
-
-
-
-\### Result
-
-
+Confirm:
 
 ```text
-
-\[PASS] Existing Sysmon installation ruled out
-
+IPv4 Address = 172.16.10.50
+Subnet Mask  = 255.255.255.0
+Gateway      = 172.16.10.1
+DNS Server   = 192.168.66.53
 ```
 
-
-
-\---
-
-
-
-\## 2. Offline Sysmon Transfer
-
-
-
-Sysmon was downloaded on the administrative workstation rather than directly from the isolated victim.
-
-
-
-The files were placed under:
-
-
-
-```text
-
-C:\\LabTools\\Sysmon
-
-```
-
-
-
-A PowerShell session to the victim was created:
-
-
+Verify the gateway:
 
 ```powershell
-
-$session = New-PSSession -ComputerName 172.16.10.50 -Credential victim
-
+ping 172.16.10.1
 ```
 
+---
 
+## Verify DNS Resolution
 
-The destination directory was created:
-
-
+Run:
 
 ```powershell
-
-Invoke-Command -Session $session -ScriptBlock {
-
-&#x20;   New-Item -ItemType Directory -Path C:\\LabTools\\Sysmon -Force
-
-}
-
+nslookup normal.exfil.test 192.168.66.53
 ```
-
-
-
-The Sysmon files were copied into the victim:
-
-
-
-```powershell
-
-Copy-Item C:\\LabTools\\Sysmon\\\* `
-
-\-Destination C:\\LabTools\\Sysmon `
-
-\-ToSession $session `
-
-\-Recurse
-
-```
-
-
-
-The transferred files were verified on the victim.
-
-
-
-\---
-
-
-
-\## 3. Sysmon Configuration
-
-
-
-A minimal configuration was created to collect the telemetry needed by this lab:
-
-
-
-```xml
-
-<Sysmon schemaversion="4.90">
-
-&#x20; <EventFiltering>
-
-&#x20;   <ProcessCreate onmatch="exclude" />
-
-&#x20;   <NetworkConnect onmatch="exclude" />
-
-&#x20;   <DnsQuery onmatch="exclude" />
-
-&#x20; </EventFiltering>
-
-</Sysmon>
-
-```
-
-
-
-The configuration was saved as:
-
-
-
-```text
-
-C:\\LabTools\\Sysmon\\sysmonconfig.xml
-
-```
-
-
-
-\---
-
-
-
-\## 4. Install Sysmon
-
-
-
-From an elevated PowerShell session on the victim:
-
-
-
-```powershell
-
-cd C:\\LabTools\\Sysmon
-
-```
-
-
-
-Install Sysmon:
-
-
-
-```powershell
-
-.\\Sysmon64.exe -accepteula -i .\\sysmonconfig.xml
-
-```
-
-
-
-Verify the service:
-
-
-
-```powershell
-
-Get-Service Sysmon\*
-
-```
-
-
-
-Verify the event log:
-
-
-
-```powershell
-
-Get-WinEvent -ListLog "Microsoft-Windows-Sysmon/Operational" |
-
-Select-Object LogName,RecordCount,IsEnabled
-
-```
-
-
-
-\### Result
-
-
-
-```text
-
-\[PASS] Sysmon installed
-
-\[PASS] Sysmon service operational
-
-\[PASS] Sysmon Operational log enabled
-
-```
-
-
-
-\---
-
-
-
-\# 5. Validate Event ID 1 — Process Creation
-
-
-
-A controlled process was generated:
-
-
-
-```powershell
-
-Start-Process cmd.exe -ArgumentList '/c','echo SYSMON\_EVENT1\_TEST > C:\\LabTools\\Sysmon\\event1\_test.txt' -Wait
-
-```
-
-
-
-Confirm the command ran:
-
-
-
-```powershell
-
-Get-Content C:\\LabTools\\Sysmon\\event1\_test.txt
-
-```
-
-
-
-Search for recent Event ID 1 records:
-
-
-
-```powershell
-
-Get-WinEvent -FilterHashtable @{
-
-&#x20;   LogName='Microsoft-Windows-Sysmon/Operational'
-
-&#x20;   Id=1
-
-&#x20;   StartTime=(Get-Date).AddMinutes(-5)
-
-} | Where-Object {$\_.Message -match 'SYSMON\_EVENT1\_TEST|cmd.exe'} |
-
-Select-Object TimeCreated,Id,Message
-
-```
-
-
 
 Validated result:
 
+```text
+Name:    normal.exfil.test
+Address: 192.168.66.53
+```
 
+The following test names were also successfully used:
 
 ```text
-
-Event ID 1
-
-Process Create
-
-```
-
-
-
-\### Result
-
-
-
-```text
-
-\[PASS] Event ID 1 — Process Creation
-
-```
-
-
-
-\---
-
-
-
-\# 6. Validate Event ID 3 — Network Connection
-
-
-
-Generate a controlled network connection to the lab DNS server:
-
-
-
-```powershell
-
-Test-NetConnection 192.168.66.53 -Port 53
-
-```
-
-
-
-Search Sysmon:
-
-
-
-```powershell
-
-Get-WinEvent -FilterHashtable @{
-
-&#x20;   LogName='Microsoft-Windows-Sysmon/Operational'
-
-&#x20;   Id=3
-
-&#x20;   StartTime=(Get-Date).AddMinutes(-5)
-
-} | Where-Object {$\_.Message -match '192\\.168\\.66\\.53'} |
-
-Select-Object TimeCreated,Id,Message
-
-```
-
-
-
-The event identified the connection to:
-
-
-
-```text
-
-Destination IP:   192.168.66.53
-
-Destination Port: 53
-
-```
-
-
-
-\### Result
-
-
-
-```text
-
-\[PASS] Event ID 3 — Network Connection
-
-```
-
-
-
-\---
-
-
-
-\# 7. Validate Event ID 22 — DNS Query
-
-
-
-Generate a unique DNS query:
-
-
-
-```powershell
-
-nslookup sysmon22test.exfil.test 192.168.66.53
-
-```
-
-
-
-Search for Event ID 22:
-
-
-
-```powershell
-
-Get-WinEvent -FilterHashtable @{
-
-&#x20;   LogName='Microsoft-Windows-Sysmon/Operational'
-
-&#x20;   Id=22
-
-&#x20;   StartTime=(Get-Date).AddMinutes(-5)
-
-} | Where-Object {$\_.Message -match 'sysmon22test\\.exfil\\.test'} |
-
-Select-Object TimeCreated,Id,Message
-
-```
-
-
-
-The query was successfully recorded by Sysmon.
-
-
-
-\### Result
-
-
-
-```text
-
-\[PASS] Event ID 22 — DNS Query
-
-```
-
-
-
-\---
-
-
-
-\# 8. Validate Events in Event Viewer
-
-
-
-On the Windows victim, open:
-
-
-
-```text
-
-eventvwr.msc
-
-```
-
-
-
-Navigate to:
-
-
-
-```text
-
-Applications and Services Logs
-
-&#x20;   > Microsoft
-
-&#x20;       > Windows
-
-&#x20;           > Sysmon
-
-&#x20;               > Operational
-
-```
-
-
-
-Select:
-
-
-
-```text
-
-Filter Current Log
-
-```
-
-
-
-Enter:
-
-
-
-```text
-
-1,3,22
-
-```
-
-
-
-The generated test events were visible.
-
-
-
-\### Verified Events
-
-
-
-```text
-
-Event ID 1  - Process Creation
-
-Event ID 3  - Network Connection
-
-Event ID 22 - DNS Query
-
-```
-
-
-
-\### Result
-
-
-
-```text
-
-\[PASS] Sysmon telemetry visible in Windows Event Viewer
-
-```
-
-
-
-\---
-
-
-
-\# 9. Why This Matters
-
-
-
-Sysmon provides endpoint context that network DNS logs alone cannot provide.
-
-
-
-For example:
-
-
-
-```text
-
-Windows Process
-
-&#x20;     |
-
-&#x20;     v
-
-DNS Query
-
+confirmation001.exfil.test
+testdata001.exfil.test
 sysmon22test.exfil.test
-
-&#x20;     |
-
-&#x20;     v
-
-DNS Server
-
-192.168.66.53
-
 ```
 
+Example:
 
+```powershell
+nslookup confirmation001.exfil.test 192.168.66.53
+```
 
-This allows later analysis to answer questions such as:
+---
 
+## `Server: Unknown`
 
+`nslookup` may display:
 
 ```text
-
-Which host generated the DNS request?
-
-Which process generated it?
-
-Which user was running the process?
-
-Which destination was contacted?
-
-What DNS name was queried?
-
+Server:  Unknown
+Address: 192.168.66.53
 ```
 
+This does not indicate a failed DNS lookup.
 
-
-\---
-
-
-
-
-
-\# Confirmed Sysmon State
-
-
+Windows performs a reverse lookup for:
 
 ```text
-
-Host:          Windows 11 Victim
-
-IP:            172.16.10.50
-
-
-
-Sysmon:        Installed and Operational
-
-
-
-Collected:
-
-Event ID 1     Process Creation
-
-Event ID 3     Network Connection
-
-Event ID 22    DNS Query
-
-
-
-Event Log:
-
-Microsoft-Windows-Sysmon/Operational
-
-
-
-Validated DNS Test:
-
-sysmon22test.exfil.test
-
+53.66.168.192.in-addr.arpa
 ```
 
+The lab does not currently have a reverse PTR zone for `192.168.66.53`, so BIND9 may return:
+
+```text
+REFUSED
+```
+
+Forward resolution of `exfil.test` continues to work normally.
+
+---
+
+## Packet-Level DNS Validation
+
+On the DNS server:
+
+```bash
+sudo tcpdump -ni any 'host 172.16.10.50 and port 53'
+```
+
+A validated query showed:
+
+```text
+172.16.10.50.64309 > 192.168.66.53.53:
+A? confirmation001.exfil.test.
+```
+
+The DNS server replied:
+
+```text
+192.168.66.53.53 > 172.16.10.50.64309:
+A 192.168.66.53
+```
+
+Windows also generated an AAAA request:
+
+```text
+AAAA? confirmation001.exfil.test.
+```
+
+This is normal. The lab currently uses IPv4, so the successful `A` response is the important result.
+
+---
+
+## PowerShell Remote Administration
+
+Because the victim uses **Windows 11 Home**, it cannot normally act as a Microsoft Remote Desktop host.
+
+PowerShell Remoting using WinRM was configured instead.
+
+The administration path is:
+
+```text
+Admin Workstation
+172.16.99.10
+VLAN 99 / MGMT
+      |
+      | WinRM TCP/5985
+      v
+Juniper SRX
+      |
+      v
+Windows Victim
+172.16.10.50
+VLAN 10 / VICTIMS
+```
+
+### Victim WinRM Validation
+
+WinRM was confirmed with:
+
+```powershell
+winrm quickconfig
+```
+
+TCP/5985 was confirmed listening:
+
+```powershell
+Get-NetTCPConnection -LocalPort 5985 -State Listen
+```
+
+The network profile was verified:
+
+```powershell
+Get-NetConnectionProfile
+```
+
+Result:
+
+```text
+NetworkCategory = Private
+```
+
+The WinRM firewall rule was verified:
+
+```powershell
+Get-NetFirewallRule -Name "WINRM-HTTP-In-TCP-NoScope" |
+Select-Object Name,Enabled,Profile
+```
+
+The allowed source scope was checked with:
+
+```powershell
+Get-NetFirewallRule -Name "WINRM-HTTP-In-TCP-NoScope" |
+Get-NetFirewallAddressFilter
+```
+
+---
+
+## Administrative Workstation Route
+
+The administrative workstation uses:
+
+```text
+172.16.99.10
+```
+
+A persistent route exists for VLAN 10:
+
+```text
+172.16.10.0/24 -> 172.16.99.1
+```
+
+Verify with:
+
+```powershell
+Get-NetRoute -DestinationPrefix "172.16.10.0/24"
+```
+
+The Juniper SRX gateway was successfully reached:
+
+```powershell
+Test-NetConnection 172.16.99.1
+```
+
+---
+
+## Juniper Security Zones
+
+The SRX configuration confirmed:
+
+```text
+ge-0/0/0.99 = MGMT
+ge-0/0/0.10 = VICTIMS
+```
+
+Commands used:
+
+```text
+show configuration security zones | display set | match ge-0/0/0.99
+```
+
+```text
+show configuration security zones | display set | match ge-0/0/0.10
+```
+
+A restricted management path was required for:
+
+```text
+172.16.99.10 -> 172.16.10.50 TCP/5985
+```
+
+---
+
+## Connect to the Victim
+
+From the administrative Windows workstation:
+
+```powershell
+Enter-PSSession -ComputerName 172.16.10.50 -Credential victim
+```
+
+A successful session produces a prompt similar to:
+
+```text
+[172.16.10.50]: PS C:\Users\Victim\Documents>
+```
+
+This remote session is now used to administer the victim and run lab commands without relying on the Proxmox console.
+
+---
 
 
-\---
+## Confirmed State
 
+```text
+System:          Windows 11 Home
+Role:            Victim / DNS Test Source
+IP:              172.16.10.50
+Subnet:          /24
+Gateway:         172.16.10.1
+DNS:             192.168.66.53
+VLAN:            10
+DNS Zone:        exfil.test
+Remote Admin:    PowerShell Remoting / WinRM
+WinRM Port:      TCP/5985
+```
 
+---
 
-\# Conclusion
+## Conclusion
 
+The Windows 11 victim is fully operational.
 
+DNS communication between `172.16.10.50` and `192.168.66.53` has been validated, and PowerShell Remoting provides remote command-line administration from the management workstation.
 
-Sysmon endpoint telemetry is successfully operating on the Windows 11 victim.
-
-
-
-Process creation, network connection, and DNS query activity have all been generated and confirmed in the Sysmon Operational event log and Windows Event Viewer.
-
-
-
+The victim is ready for endpoint telemetry collection using Sysmon.
