@@ -1,4 +1,4 @@
-# 07. Splunk Server
+# 07\. Splunk Server
 
 ## Purpose
 
@@ -6,15 +6,15 @@ Splunk Enterprise collects, stores, and searches security events from the Window
 
 The Windows victim already has Sysmon installed and validated for:
 
-| Event ID | Event type |
-|---:|---|
-| `1` | Process creation |
-| `3` | Network connection |
-| `22` | DNS query |
+|Event ID|Event type|
+|-:|-|
+|`1`|Process creation|
+|`3`|Network connection|
+|`22`|DNS query|
 
 The next phase will install the Splunk Universal Forwarder on Windows and send these events to this server.
 
----
+\---
 
 ## Current Status
 
@@ -30,50 +30,50 @@ http://172.16.99.40:8000
 
 TCP port `9997`, the Windows Universal Forwarder, and Sysmon ingestion are still pending.
 
----
+\---
 
 ## Verified Splunk VM
 
-| Setting | Verified value |
-|---|---|
-| Proxmox VMID | `902` |
-| Proxmox VM name | `SPLUNK-SRV-01` |
-| Ubuntu hostname | `splunk-srv-01` |
-| Operating system | Ubuntu Server `24.04.4 LTS`, AMD64 |
-| CPU | 1 socket, 4 virtual CPU cores, host CPU type |
-| Memory | 12 GB (`12288` MiB), ballooning disabled |
-| Disk | 150 GB on `ext-ssd` |
-| Disk controller | VirtIO SCSI single |
-| Proxmox bridge | `vmbr0` |
-| VLAN | `99` |
-| Network adapter | VirtIO, MAC `BC:24:11:6A:31:E8` |
-| Ubuntu interface | `enp6s18` |
-| IP address | `172.16.99.40/24` |
-| Default gateway | `172.16.99.1` |
-| DNS server | `192.168.66.53` |
-| Splunk Enterprise | `10.4.3` |
-| Splunk installation path | `/opt/splunk` |
-| Splunk Web | TCP `8000` |
-| Splunk management port | TCP `8089` |
-| Forwarder receiving port | TCP `9997` — pending |
+|Setting|Verified value|
+|-|-|
+|Proxmox VMID|`902`|
+|Proxmox VM name|`SPLUNK-SRV-01`|
+|Ubuntu hostname|`splunk-srv-01`|
+|Operating system|Ubuntu Server `24.04.4 LTS`, AMD64|
+|CPU|1 socket, 4 virtual CPU cores, host CPU type|
+|Memory|12 GB (`12288` MiB), ballooning disabled|
+|Disk|150 GB on `ext-ssd`|
+|Disk controller|VirtIO SCSI single|
+|Proxmox bridge|`vmbr0`|
+|VLAN|`99`|
+|Network adapter|VirtIO, MAC `BC:24:11:6A:31:E8`|
+|Ubuntu interface|`enp6s18`|
+|IP address|`172.16.99.40/24`|
+|Default gateway|`172.16.99.1`|
+|DNS server|`192.168.66.53`|
+|Splunk Enterprise|`10.4.3`|
+|Splunk installation path|`/opt/splunk`|
+|Splunk Web|TCP `8000`|
+|Splunk management port|TCP `8089`|
+|Forwarder receiving port|TCP `9997` — pending|
 
 This is a small proof-of-concept deployment and is not intended to represent production Splunk sizing.
 
----
+\---
 
 ## Account Separation
 
 Three separate accounts are used. Even when two accounts have the same name, they belong to different authentication systems.
 
-| Account | Purpose |
-|---|---|
-| Ubuntu `splunkadmin` | Interactive SSH login and Ubuntu administration |
-| Linux `splunk` | Non-root service account that runs Splunk |
-| Splunk Web `splunkadmin` | Administrator account inside Splunk Enterprise |
+|Account|Purpose|
+|-|-|
+|Ubuntu `splunkadmin`|Interactive SSH login and Ubuntu administration|
+|Linux `splunk`|Non-root service account that runs Splunk|
+|Splunk Web `splunkadmin`|Administrator account inside Splunk Enterprise|
 
 Passwords are intentionally excluded from this repository.
 
----
+\---
 
 ## How the Data Will Travel
 
@@ -99,9 +99,9 @@ Splunk Enterprise (172.16.99.40)
 Windows Analyst (172.16.99.10)
 ```
 
----
+\---
 
-## 1. Verify the Proxmox VM
+## 1\. Verify the Proxmox VM
 
 From the Proxmox shell, verify VM `902`:
 
@@ -125,14 +125,14 @@ onboot: 1
 
 Proxmox provides VLAN 99 to the virtual adapter. Ubuntu therefore uses a normal untagged interface and does not create a VLAN subinterface inside the guest.
 
----
+\---
 
-## 2. Upload and Attach the Ubuntu ISO
+## 2\. Upload and Attach the Ubuntu ISO
 
 The required ISO was not initially present on Proxmox. Ubuntu Server `24.04.4` was downloaded to the Windows analyst workstation and copied into Proxmox ISO storage:
 
 ```powershell
-scp "$env:USERPROFILE\Downloads\ubuntu-24.04.4-live-server-amd64.iso" root@172.16.99.20:/var/lib/vz/template/iso/
+scp "$env:USERPROFILE\\Downloads\\ubuntu-24.04.4-live-server-amd64.iso" root@172.16.99.20:/var/lib/vz/template/iso/
 ```
 
 Verify the uploaded ISO from Proxmox:
@@ -159,28 +159,28 @@ Start the VM:
 qm start 902
 ```
 
----
+\---
 
-## 3. Install Ubuntu Server
+## 3\. Install Ubuntu Server
 
 During the Ubuntu installer, the network interface was shown as `enp6s18`. DHCP autoconfiguration failed because this management network uses static addressing.
 
 The final manual IPv4 values are:
 
-| Installer field | Value |
-|---|---|
-| Subnet | `172.16.99.0/24` |
-| Address | `172.16.99.40` |
-| Gateway | `172.16.99.1` |
-| Name servers | `192.168.66.53` |
-| Search domains | Blank |
+|Installer field|Value|
+|-|-|
+|Subnet|`172.16.99.0/24`|
+|Address|`172.16.99.40`|
+|Gateway|`172.16.99.1`|
+|Name servers|`192.168.66.53`|
+|Search domains|Blank|
 
 The server profile uses:
 
-| Field | Value |
-|---|---|
-| Server name | `splunk-srv-01` |
-| Ubuntu administrator | `splunkadmin` |
+|Field|Value|
+|-|-|
+|Server name|`splunk-srv-01`|
+|Ubuntu administrator|`splunkadmin`|
 
 The password is private and must not be placed in the repository.
 
@@ -202,9 +202,9 @@ Verify:
 qm config 902
 ```
 
----
+\---
 
-## 4. Correct the IP-Address Conflict
+## 4\. Correct the IP-Address Conflict
 
 The address `172.16.99.30` was initially considered for Splunk, but SSH displayed an existing unauthorized-access banner and the new Ubuntu VM recorded no matching SSH log entries.
 
@@ -246,7 +246,7 @@ network:
       nameservers:
         addresses:
           - 192.168.66.53
-        search: []
+        search: \[]
       routes:
         - to: default
           via: 172.16.99.1
@@ -274,9 +274,9 @@ enp6s18    UP    172.16.99.40/24
 default via 172.16.99.1 dev enp6s18
 ```
 
----
+\---
 
-## 5. Verify Ubuntu and SSH
+## 5\. Verify Ubuntu and SSH
 
 Connect from Windows PowerShell:
 
@@ -303,16 +303,16 @@ Set UTC so timestamps remain consistent across Ubuntu, Splunk, Sysmon, and the D
 sudo timedatectl set-timezone UTC
 ```
 
----
+\---
 
-## 6. Download and Transfer Splunk Enterprise
+## 6\. Download and Transfer Splunk Enterprise
 
 Splunk Enterprise `10.4.3` for AMD64 Linux was downloaded on Windows as a Debian package.
 
 From Windows PowerShell:
 
 ```powershell
-cd $env:USERPROFILE\Downloads
+cd $env:USERPROFILE\\Downloads
 
 curl.exe -L "https://download.splunk.com/products/splunk/releases/10.4.3/linux/splunk-10.4.3-4174a2deda5d-linux-amd64.deb" -o "splunk-10.4.3-4174a2deda5d-linux-amd64.deb"
 ```
@@ -320,30 +320,30 @@ curl.exe -L "https://download.splunk.com/products/splunk/releases/10.4.3/linux/s
 Confirm the file:
 
 ```powershell
-Get-Item ".\splunk-10.4.3-4174a2deda5d-linux-amd64.deb" |
+Get-Item ".\\splunk-10.4.3-4174a2deda5d-linux-amd64.deb" |
 Select-Object Name,Length
 ```
 
 Transfer it to VM `902`:
 
 ```powershell
-scp ".\splunk-10.4.3-4174a2deda5d-linux-amd64.deb" splunkadmin@172.16.99.40:/home/splunkadmin/
+scp ".\\splunk-10.4.3-4174a2deda5d-linux-amd64.deb" splunkadmin@172.16.99.40:/home/splunkadmin/
 ```
 
 Verify it from Ubuntu:
 
 ```bash
-ls -lh ~/splunk-*.deb
+ls -lh \~/splunk-\*.deb
 ```
 
----
+\---
 
-## 7. Install and Start Splunk
+## 7\. Install and Start Splunk
 
 Install the local Debian package:
 
 ```bash
-sudo dpkg -i ~/splunk-10.4.3-4174a2deda5d-linux-amd64.deb
+sudo dpkg -i \~/splunk-10.4.3-4174a2deda5d-linux-amd64.deb
 ```
 
 Verify the package:
@@ -376,7 +376,7 @@ Verify the process and listening ports:
 
 ```bash
 sudo -H -u splunk /opt/splunk/bin/splunk status
-sudo ss -lntp | grep -E ':(8000|8089)\b'
+sudo ss -lntp | grep -E ':(8000|8089)\\b'
 ```
 
 Open Splunk Web using the IP address:
@@ -387,9 +387,9 @@ http://172.16.99.40:8000
 
 `http://splunk-srv-01:8000` will not work until a DNS record or Windows hosts-file entry is added for that hostname.
 
----
+\---
 
-## 8. Configure Automatic Startup
+## 8\. Configure Automatic Startup
 
 Splunk must run as the non-root Linux account `splunk`.
 
@@ -440,7 +440,7 @@ enabled
 active
 ```
 
----
+\---
 
 ## Troubleshooting: Incorrect Boot-Start User
 
@@ -450,7 +450,7 @@ The boot-start command was initially entered with `-user splunkadmin`. This caus
 Warning: cannot create "/opt/splunk/var/log/splunk"
 Warning: cannot create "/opt/splunk/var/log/introspection"
 Warning: cannot create "/opt/splunk/var/log/watchdog"
-Warning: cannot create "/opt/splunk/var/log/client_events"
+Warning: cannot create "/opt/splunk/var/log/client\_events"
 ```
 
 The incorrect unit was removed and regenerated with the correct service account:
@@ -466,51 +466,27 @@ sudo systemctl enable --now Splunkd.service
 
 The important distinction is:
 
-- `splunkadmin` administers Ubuntu and signs in to Splunk Web.
-- `splunk` owns the Splunk files and runs `Splunkd.service`.
+* `splunkadmin` administers Ubuntu and signs in to Splunk Web.
+* `splunk` owns the Splunk files and runs `Splunkd.service`.
 
----
-
-## Installation Checklist
-
-- [x] Create Proxmox VM `902`.
-- [x] Upload and attach the Ubuntu Server ISO.
-- [x] Install Ubuntu Server 24.04.4 LTS.
-- [x] Set hostname `splunk-srv-01`.
-- [x] Identify the conflict with Security Onion at `172.16.99.30`.
-- [x] Assign the final Splunk address `172.16.99.40/24`.
-- [x] Verify the gateway and DNS-server path.
-- [x] Verify SSH access from the Windows analyst workstation.
-- [x] Set the Ubuntu time zone to UTC.
-- [x] Download and transfer Splunk Enterprise `10.4.3`.
-- [x] Install Splunk under `/opt/splunk`.
-- [x] Start Splunk with the dedicated `splunk` account.
-- [x] Verify access to Splunk Web on TCP `8000`.
-- [x] Configure and verify `Splunkd.service`.
-- [ ] Install and verify the QEMU Guest Agent inside Ubuntu.
-- [ ] Add a DNS record for `splunk-srv-01` if hostname-based access is required.
-- [ ] Create the Sysmon index.
-- [ ] Enable the Splunk receiver on TCP `9997`.
-- [ ] Install Splunk Universal Forwarder on Windows 11.
-- [ ] Configure collection of the Sysmon Operational event log.
-- [ ] Verify that Sysmon Event IDs `1`, `3`, and `22` reach Splunk.
-- [ ] Save final screenshots and command output in the `evidence/` folder.
-
----
+\---
 
 ## Reference Documentation
 
-- [Splunk Enterprise download](https://www.splunk.com/en_us/download/splunk-enterprise.html)
-- [Install Splunk Enterprise on Linux](https://help.splunk.com/en/splunk-enterprise/administer/install-and-upgrade/9.1/install-splunk-enterprise-on-linux-or-macos/install-on-linux)
-- [Run Splunk Enterprise as a systemd service](https://help.splunk.com/en/data-management/splunk-enterprise-admin-manual/9.3/start-splunk-enterprise-and-perform-initial-tasks/run-splunk-enterprise-as-a-systemd-service)
+* [Splunk Enterprise download](https://www.splunk.com/en_us/download/splunk-enterprise.html)
+* [Install Splunk Enterprise on Linux](https://help.splunk.com/en/splunk-enterprise/administer/install-and-upgrade/9.1/install-splunk-enterprise-on-linux-or-macos/install-on-linux)
+* [Run Splunk Enterprise as a systemd service](https://help.splunk.com/en/data-management/splunk-enterprise-admin-manual/9.3/start-splunk-enterprise-and-perform-initial-tasks/run-splunk-enterprise-as-a-systemd-service)
 
----
+\---
 
 ## Documentation Log
 
-| Date | Update |
-|---|---|
-| 2026-09-03 | Created the initial beginner-friendly Splunk server plan. |
-| 2026-09-04 | Created Proxmox VM `902` with 4 cores, 12 GB RAM, and a 150 GB disk. |
-| 2026-09-04 | Installed Ubuntu Server and corrected the IP conflict with Security Onion by changing Splunk from `172.16.99.30` to `172.16.99.40`. |
-| 2026-09-04 | Installed Splunk Enterprise `10.4.3`, verified Splunk Web on TCP `8000`, corrected the boot-start service account, and confirmed `Splunkd.service` is active and enabled. |
+|Date|Update|
+|-|-|
+|2026-09-03|Created the initial Splunk server plan.|
+|2026-09-04|Created Proxmox VM `902` with 4 cores, 12 GB RAM, and a 150 GB disk.|
+|2026-09-04|Installed Ubuntu Server and corrected the IP conflict with Security Onion by changing Splunk from `172.16.99.30` to `172.16.99.40`.|
+|2026-09-04|Installed Splunk Enterprise `10.4.3`, verified Splunk Web on TCP `8000`, corrected the boot-start service account, and confirmed `Splunkd.service` is active and enabled.|
+
+
+
