@@ -14,5 +14,5 @@ This file proves that Security Onion received and analyzed the copied DNS traffi
 
 ## Evidence
 
-Record commands, search results, timestamps, and screenshot names here.
+
 

@@ -19,5 +19,5 @@ List the important screenshots, logs, packet captures, and timestamps here.
 
 ## Final Summary
 
-Write a short beginner-friendly explanation of the final result here.
+
 

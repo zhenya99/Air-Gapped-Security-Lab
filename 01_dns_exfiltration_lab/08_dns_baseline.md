@@ -2,11 +2,7 @@
 
 ## Purpose
 
-A baseline shows what normal DNS traffic looks like before suspicious traffic is generated.
-
 ## Normal Tests
-
-Record each normal DNS test, the time it was run, and the expected result.
 
 ## What to Measure
 
@@ -18,5 +14,5 @@ Record each normal DNS test, the time it was run, and the expected result.
 
 ## Results
 
-Add a short summary of the normal behavior here.
+
 

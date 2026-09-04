@@ -13,8 +13,6 @@ This step creates unusual DNS requests using fake test data so they can be detec
 
 ## Test Procedure
 
-Record the exact simulation command, start time, stop time, and expected result here.
 
 ## Validation
 
-Record where the traffic appeared in BIND9, Security Onion, and Splunk.
