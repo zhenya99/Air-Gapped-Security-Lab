@@ -28,5 +28,3 @@ The pre-lab network configuration was saved as:
 ```text
 /root/interfaces.before-dns-lab-2026-09-02
 ```
-
-Add the exact restoration commands only after they have been safely tested.
